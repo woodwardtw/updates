@@ -54,7 +54,7 @@ add_filter('gform_pre_render_1', 'dlinq_update_software_dropdown');
 function dlinq_update_software_dropdown($form){
 
     $terms = get_terms( array(
-        'taxonomy' => 'Software',
+        'taxonomy' => 'software',
         'hide_empty' => false,
         'orderby'   =>'title',
         'order'   =>'ASC',
@@ -63,17 +63,15 @@ function dlinq_update_software_dropdown($form){
     //Creating drop down item array.
     $items = array();
 
-    //Adding initial blank value.
-    $items[] = array("text" => "", "value" => "");
 
     //Adding post titles to the items array
     foreach($terms as $term)
         $items[] = array(
-           "value" => $term->term_id, 
+           "value" => $term->name, 
            "text" =>  $term->name
       );
 
-    //Adding items to field id 38
+    //Adding items to field id 5
     foreach($form["fields"] as &$field)
         if($field["id"] == 5){
             $field["type"] = "select";
@@ -83,6 +81,37 @@ function dlinq_update_software_dropdown($form){
     return $form;
 }
 
+
+add_filter('gform_pre_render_1', 'dlinq_update_type_dropdown');
+function dlinq_update_type_dropdown($form){
+
+    $terms = get_terms( array(
+        'taxonomy' => 'update-types',
+        'hide_empty' => false,
+        'orderby'   =>'title',
+        'order'   =>'ASC',
+    ) );
+
+    //Creating drop down item array.
+    $items = array();
+
+
+    //Adding post titles to the items array
+    foreach($terms as $term)
+        $items[] = array(
+           "value" => $term->name, 
+           "text" =>  $term->name
+      );
+
+    //Adding items to field id 5
+    foreach($form["fields"] as &$field)
+        if($field["id"] == 4){
+            $field["type"] = "select";
+            $field["choices"] = $items;
+        }
+
+    return $form;
+}
 
 //save acf json
 add_filter('acf/settings/save_json', 'dlinq_updates_json_save_point');

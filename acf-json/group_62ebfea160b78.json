@@ -15,7 +15,7 @@
                 "class": "",
                 "id": ""
             },
-            "taxonomy": "Update types",
+            "taxonomy": "update-types",
             "field_type": "checkbox",
             "add_term": 1,
             "save_terms": 0,
@@ -37,7 +37,7 @@
                 "class": "",
                 "id": ""
             },
-            "taxonomy": "Software",
+            "taxonomy": "software",
             "field_type": "checkbox",
             "add_term": 1,
             "save_terms": 0,
@@ -65,5 +65,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1660054343
+    "modified": 1660058561
 }

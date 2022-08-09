@@ -84,7 +84,7 @@ function create_software_taxonomies()
     'singular_name' => _x( 'Software', 'taxonomy singular name' ),
     'search_items' =>  __( 'Search Software' ),
     'popular_items' => __( 'Popular Software' ),
-    'all_items' => __( 'All Softwares' ),
+    'all_items' => __( 'All Software' ),
     'parent_item' => null,
     'parent_item_colon' => null,
     'edit_item' => __( 'Edit Software' ),
@@ -93,11 +93,11 @@ function create_software_taxonomies()
     'new_item_name' => __( 'New software' ),
     'add_or_remove_items' => __( 'Add or remove Software' ),
     'choose_from_most_used' => __( 'Choose from the most used Software' ),
-    'menu_name' => __( 'software' ),
+    'menu_name' => __( 'Software' ),
   );
 
 //registers taxonomy specific post types - default is just post
-  register_taxonomy('Software',array('update'), array(
+  register_taxonomy('software',array('update'), array(
     'hierarchical' => true,
     'labels' => $labels,
     'show_ui' => true,
@@ -134,7 +134,7 @@ function create_update_type_taxonomies()
   );
 
 //registers taxonomy specific post types - default is just post
-  register_taxonomy('Update types',array('update'), array(
+  register_taxonomy('update-types',array('update'), array(
     'hierarchical' => true,
     'labels' => $labels,
     'show_ui' => true,

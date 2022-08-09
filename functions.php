@@ -67,7 +67,7 @@ function dlinq_update_software_dropdown($form){
     //Adding post titles to the items array
     foreach($terms as $term)
         $items[] = array(
-           "value" => $term->name, 
+           "value" => $term->slug, 
            "text" =>  $term->name
       );
 
@@ -99,7 +99,7 @@ function dlinq_update_type_dropdown($form){
     //Adding post titles to the items array
     foreach($terms as $term)
         $items[] = array(
-           "value" => $term->name, 
+           "value" => $term->slug, 
            "text" =>  $term->name
       );
 

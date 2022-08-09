@@ -130,7 +130,7 @@ function create_update_type_taxonomies()
     'new_item_name' => __( 'New update type' ),
     'add_or_remove_items' => __( 'Add or remove Update_types' ),
     'choose_from_most_used' => __( 'Choose from the most used Update_types' ),
-    'menu_name' => __( 'update_type' ),
+    'menu_name' => __( 'Update Type' ),
   );
 
 //registers taxonomy specific post types - default is just post

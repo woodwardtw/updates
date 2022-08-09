@@ -45,35 +45,74 @@ foreach ( $understrap_includes as $file ) {
 	require_once get_theme_file_path( $understrap_inc_dir . $file );
 }
 
-	//save acf json
-		add_filter('acf/settings/save_json', 'dlinq_updates_json_save_point');
-		 
-		function dlinq_updates_json_save_point( $path ) {
-		    
-		    // update path
-		    $path = get_stylesheet_directory() . '/acf-json'; //replace w get_stylesheet_directory() for theme
-		    
-		    
-		    // return
-		    return $path;
-		    
-		}
+
+//gravity forms
+//Gravity Forms, populate a filter with all members
+//Adds a filter to form id 3. Replace 3 with your actual form id
+
+add_filter('gform_pre_render_1', 'dlinq_update_software_dropdown');
+function dlinq_update_software_dropdown($form){
+
+    $terms = get_terms( array(
+        'taxonomy' => 'Software',
+        'hide_empty' => false,
+        'orderby'   =>'title',
+        'order'   =>'ASC',
+    ) );
+
+    //Creating drop down item array.
+    $items = array();
+
+    //Adding initial blank value.
+    $items[] = array("text" => "", "value" => "");
+
+    //Adding post titles to the items array
+    foreach($terms as $term)
+        $items[] = array(
+           "value" => $term->term_id, 
+           "text" =>  $term->name
+      );
+
+    //Adding items to field id 38
+    foreach($form["fields"] as &$field)
+        if($field["id"] == 5){
+            $field["type"] = "select";
+            $field["choices"] = $items;
+        }
+
+    return $form;
+}
 
 
-		// load acf json
-		add_filter('acf/settings/load_json', 'dlinq_updates_json_load_point');
+//save acf json
+add_filter('acf/settings/save_json', 'dlinq_updates_json_save_point');
+ 
+function dlinq_updates_json_save_point( $path ) {
+    
+    // update path
+    $path = get_stylesheet_directory() . '/acf-json'; //replace w get_stylesheet_directory() for theme
+    
+    
+    // return
+    return $path;
+    
+}
 
-		function dlinq_updates_json_load_point( $paths ) {
-		    
-		    // remove original path (optional)
-		    unset($paths[0]);
-		    
-		    
-		    // append path
-		    $paths[] = get_stylesheet_directory() . '/acf-json';//replace w get_stylesheet_directory() for theme
-		    
-		    
-		    // return
-		    return $paths;
-		    
-		}
+
+// load acf json
+add_filter('acf/settings/load_json', 'dlinq_updates_json_load_point');
+
+function dlinq_updates_json_load_point( $paths ) {
+    
+    // remove original path (optional)
+    unset($paths[0]);
+    
+    
+    // append path
+    $paths[] = get_stylesheet_directory() . '/acf-json';//replace w get_stylesheet_directory() for theme
+    
+    
+    // return
+    return $paths;
+    
+}

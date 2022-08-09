@@ -97,17 +97,17 @@ function create_software_taxonomies()
   );
 
 //registers taxonomy specific post types - default is just post
-  register_taxonomy('Software',array('post'), array(
+  register_taxonomy('Software',array('update'), array(
     'hierarchical' => true,
     'labels' => $labels,
-    'show_ui' => false,
+    'show_ui' => true,
     'update_count_callback' => '_update_post_term_count',
     'query_var' => true,
     'rewrite' => array( 'slug' => 'software' ),
     'show_in_rest'          => true,
     'rest_base'             => 'software',
     'rest_controller_class' => 'WP_REST_Terms_Controller',
-    'show_in_nav_menus' => false,    
+    'show_in_nav_menus' => true,    
   ));
 }
 
@@ -134,17 +134,17 @@ function create_update_type_taxonomies()
   );
 
 //registers taxonomy specific post types - default is just post
-  register_taxonomy('Update types',array('post'), array(
+  register_taxonomy('Update types',array('update'), array(
     'hierarchical' => true,
     'labels' => $labels,
-    'show_ui' => false,
+    'show_ui' => true,
     'update_count_callback' => '_update_post_term_count',
     'query_var' => true,
     'rewrite' => array( 'slug' => 'update_type' ),
     'show_in_rest'          => true,
     'rest_base'             => 'update_type',
     'rest_controller_class' => 'WP_REST_Terms_Controller',
-    'show_in_nav_menus' => false,    
+    'show_in_nav_menus' => true,    
   ));
 }
 

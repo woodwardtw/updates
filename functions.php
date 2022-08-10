@@ -181,17 +181,16 @@ function dlinq_update_populate_type( $form ) {
 
 
 //add custom taxonomies to post bc advanced post creation plugin was failing in weird ways . . . like 2 of 8 and stuff like that
-add_action( 'gform_after_submission_1', 'dlin_update_custom_tax', 10, 2 );
+add_action( 'gform_advancedpostcreation_post_after_creation_1', 'dlin_update_custom_tax', 10, 2 );
 function dlin_update_custom_tax( $entry, $form ) {
  
     //getting post
-    $post_id = get_post( $entry['post_id'] );
- 
+    $post_id = $entry;
     $software = rgar( $entry, '5' );
+    $software = array(15, 16, 17);
     $type = rgar( $entry, '4' );
     wp_set_post_terms( $post_id, $software, 'software', false );
     wp_set_post_terms( $post_id, $type, 'update-types', false );
- 	var_dump($entry);
     //updating post
     //wp_update_post( $post );
 }

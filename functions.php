@@ -119,7 +119,7 @@ function dlinq_update_populate_software( $form ) {
                 $input_id++;
             }
  
-            $choices[] = array( 'text' => $term->name, 'value' => $term->term_id );
+            $choices[] = array( 'text' => $term->name, 'value' => $term->name );
             $inputs[] = array( 'label' => $term->name, 'id' => "{$field_id}.{$input_id}");
  
             $input_id++;
@@ -162,7 +162,7 @@ function dlinq_update_populate_type( $form ) {
                 $input_id++;
             }
  
-            $choices[] = array( 'text' => $term->name, 'value' => $term->term_id );
+            $choices[] = array( 'text' => $term->name, 'value' => $term->name);
             $inputs[] = array( 'label' => $term->name, 'id' => "{$field_id}.{$input_id}");
  
             $input_id++;
@@ -176,24 +176,6 @@ function dlinq_update_populate_type( $form ) {
     return $form;
 }
 
-
-
-
-
-//add custom taxonomies to post bc advanced post creation plugin was failing in weird ways . . . like 2 of 8 and stuff like that
-add_action( 'gform_advancedpostcreation_post_after_creation_1', 'dlin_update_custom_tax', 10, 2 );
-function dlin_update_custom_tax( $entry, $form ) {
- 
-    //getting post
-    $post_id = $entry;
-    $software = rgar( $entry, '5' );
-    $software = array(15, 16, 17);
-    $type = rgar( $entry, '4' );
-    wp_set_post_terms( $post_id, $software, 'software', false );
-    wp_set_post_terms( $post_id, $type, 'update-types', false );
-    //updating post
-    //wp_update_post( $post );
-}
 
 
 //save acf json

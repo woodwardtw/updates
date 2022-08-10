@@ -46,50 +46,8 @@ foreach ( $understrap_includes as $file ) {
 }
 
 
-//gravity forms
-//Adds a filter to form id 3. Replace 3 with your actual form id
-// add_filter( 'gform_pre_render_1', 'dlinq_update_software_dropdown' );
-// add_filter( 'gform_pre_validation_1', 'dlinq_update_software_dropdown' );
-// add_filter( 'gform_pre_submission_filter_1', 'dlinq_update_software_dropdown' );
-// add_filter( 'gform_admin_pre_render_1', 'dlinq_update_software_dropdown' );
-function dlinq_update_software_dropdown($form){
 
-	    foreach( $form['fields'] as &$field )  {
-			$field_id = 5;
-		        if ( $field->id != $field_id ) {
-		            continue;
-		        }
-
-
-		    $terms = get_terms( array(
-		        'taxonomy' => 'software',
-		        'hide_empty' => false,
-		        'orderby'   =>'title',
-		        'order'   =>'ASC',
-		    ) );
-		$input_id = 1;
-	    //Adding post titles to the items array
-	    foreach($terms as $term){
-	    	 if ( $input_id % 10 == 0 ) {
-	                $input_id++;
-	            }
-	 
-	            $choices[] = array( 'text' => $term->name, 'value' => $term->term_id);
-	            $inputs[] = array( 'label' => $term->name, 'id' => "software-{$term->term_id}" );
-	 
-	            $input_id++;
-	    	}
-	    }
-	      //   $items[] = array(
-	      //      "value" => $term->term_id, 
-	      //      "text" =>  $term->name
-	      // );
-	    // $field->choices = $choices;
-	    // $field->inputs = $inputs;
-
-	     return $form;
-}
-
+//link custom taxonomies to gravity form fields
 // NOTE: update the '1' to the ID of your form
 add_filter( 'gform_pre_render_1', 'dlinq_update_populate_software' );
 add_filter( 'gform_pre_validation_1', 'dlinq_update_populate_software' );
@@ -176,6 +134,34 @@ function dlinq_update_populate_type( $form ) {
     return $form;
 }
 
+
+//show acf fields
+
+function dlinq_update_show_software(){
+	if(get_field('software')){
+		$softwares = get_field('software');
+		echo "<h2>Software</h2>";
+		foreach ($softwares as $software){
+				$term_id = $software->term_id;
+				$title = $software->name;
+				$link = get_term_link($term_id, 'software');
+				echo "<div class='link-box'><a class='software cat-link' href='{$link}'>$title</a></div>";
+			}
+	}	
+}
+
+function dlinq_update_show_type(){
+	if(get_field('update_type')){
+		$updates = get_field('update_type');
+		echo "<h2>Update Type</h2>";
+		foreach ($updates as $update){
+				$term_id = $update->term_id;
+				$title = $update->name;
+				$link = get_term_link($term_id, 'update-types');
+				echo "<div class='link-box'><a class='type cat-link' href='{$link}'>$title</a></div>";
+			}
+	}	
+}
 
 
 //save acf json

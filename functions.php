@@ -47,74 +47,138 @@ foreach ( $understrap_includes as $file ) {
 
 
 //gravity forms
-//Gravity Forms, populate a filter with all members
 //Adds a filter to form id 3. Replace 3 with your actual form id
-
-add_filter('gform_pre_render_1', 'dlinq_update_software_dropdown');
+// add_filter( 'gform_pre_render_1', 'dlinq_update_software_dropdown' );
+// add_filter( 'gform_pre_validation_1', 'dlinq_update_software_dropdown' );
+// add_filter( 'gform_pre_submission_filter_1', 'dlinq_update_software_dropdown' );
+// add_filter( 'gform_admin_pre_render_1', 'dlinq_update_software_dropdown' );
 function dlinq_update_software_dropdown($form){
 
-    $terms = get_terms( array(
-        'taxonomy' => 'software',
-        'hide_empty' => false,
-        'orderby'   =>'title',
-        'order'   =>'ASC',
-    ) );
-
-    //Creating drop down item array.
-    $items = array();
+	    foreach( $form['fields'] as &$field )  {
+			$field_id = 5;
+		        if ( $field->id != $field_id ) {
+		            continue;
+		        }
 
 
-    //Adding post titles to the items array
-    foreach($terms as $term)
-        $items[] = array(
-           "value" => $term->term_id, 
-           "text" =>  $term->name
-      );
-    var_dump($items);
+		    $terms = get_terms( array(
+		        'taxonomy' => 'software',
+		        'hide_empty' => false,
+		        'orderby'   =>'title',
+		        'order'   =>'ASC',
+		    ) );
+		$input_id = 1;
+	    //Adding post titles to the items array
+	    foreach($terms as $term){
+	    	 if ( $input_id % 10 == 0 ) {
+	                $input_id++;
+	            }
+	 
+	            $choices[] = array( 'text' => $term->name, 'value' => $term->term_id);
+	            $inputs[] = array( 'label' => $term->name, 'id' => "software-{$term->term_id}" );
+	 
+	            $input_id++;
+	    	}
+	    }
+	      //   $items[] = array(
+	      //      "value" => $term->term_id, 
+	      //      "text" =>  $term->name
+	      // );
+	    // $field->choices = $choices;
+	    // $field->inputs = $inputs;
 
-    //Adding items to field id 5
-    foreach($form["fields"] as &$field)
-        if($field["id"] == 5){
-            $field["type"] = "select";
-            $field["choices"] = $items;
+	     return $form;
+}
+
+// NOTE: update the '1' to the ID of your form
+add_filter( 'gform_pre_render_1', 'dlinq_update_populate_software' );
+add_filter( 'gform_pre_validation_1', 'dlinq_update_populate_software' );
+add_filter( 'gform_pre_submission_filter_1', 'dlinq_update_populate_software' );
+add_filter( 'gform_admin_pre_render_1', 'dlinq_update_populate_software' );
+function dlinq_update_populate_software( $form ) {
+ 
+    foreach( $form['fields'] as &$field )  {
+ 
+        //NOTE: replace 5 with your checkbox field id
+        $field_id = 5;
+        if ( $field->id != $field_id ) {
+            continue;
         }
+ 
+        $terms = get_terms( array(
+		        'taxonomy' => 'software',
+		        'hide_empty' => false,
+		        'orderby'   =>'title',
+		        'order'   =>'ASC',
+		    ) ); 
+        $input_id = 1;
+        foreach( $terms as $term ) {
+ 
+            //skipping index that are multiples of 10 (multiples of 10 create problems as the input IDs)
+            if ( $input_id % 10 == 0 ) {
+                $input_id++;
+            }
+ 
+            $choices[] = array( 'text' => $term->name, 'value' => $term->term_id );
+            $inputs[] = array( 'label' => $term->name, 'id' => "{$field_id}.{$input_id}");
+ 
+            $input_id++;
+        }
+ 
+        $field->choices = $choices;
+        $field->inputs = $inputs;
+ 
+    }
+ 
+    return $form;
+}
 
+// NOTE: update the '1' to the ID of your form
+add_filter( 'gform_pre_render_1', 'dlinq_update_populate_type' );
+add_filter( 'gform_pre_validation_1', 'dlinq_update_populate_type' );
+add_filter( 'gform_pre_submission_filter_1', 'dlinq_update_populate_type' );
+add_filter( 'gform_admin_pre_render_1', 'dlinq_update_populate_type' );
+function dlinq_update_populate_type( $form ) {
+ 
+    foreach( $form['fields'] as &$field )  {
+ 
+        //NOTE: replace 5 with your checkbox field id
+        $field_id = 4;
+        if ( $field->id != $field_id ) {
+            continue;
+        }
+ 
+        $terms = get_terms( array(
+		        'taxonomy' => 'update-types',
+		        'hide_empty' => false,
+		        'orderby'   =>'title',
+		        'order'   =>'ASC',
+		    ) ); 
+        $input_id = 1;
+        foreach( $terms as $term ) {
+ 
+            //skipping index that are multiples of 10 (multiples of 10 create problems as the input IDs)
+            if ( $input_id % 10 == 0 ) {
+                $input_id++;
+            }
+ 
+            $choices[] = array( 'text' => $term->name, 'value' => $term->term_id );
+            $inputs[] = array( 'label' => $term->name, 'id' => "{$field_id}.{$input_id}");
+ 
+            $input_id++;
+        }
+ 
+        $field->choices = $choices;
+        $field->inputs = $inputs;
+ 
+    }
+ 
     return $form;
 }
 
 
-//Populate fields with custom taxonomies
-add_filter('gform_pre_render_1', 'dlinq_update_type_dropdown');
-function dlinq_update_type_dropdown($form){
-
-    $terms = get_terms( array(
-        'taxonomy' => 'update-types',
-        'hide_empty' => false,
-        'orderby'   =>'title',
-        'order'   =>'ASC',
-    ) );
-
-    //Creating drop down item array.
-    $items = array();
 
 
-    //Adding post titles to the items array
-    foreach($terms as $term)
-        $items[] = array(
-           "value" => $term->term_id, 
-           "text" =>  $term->name
-      );
-
-    //Adding items to field id 5
-    var_dump($items);
-    foreach($form["fields"] as &$field)
-        if($field["id"] == 4){
-            $field["type"] = "select";
-            $field["choices"] = $items;
-        }
-
-    return $form;
-}
 
 //add custom taxonomies to post bc advanced post creation plugin was failing in weird ways . . . like 2 of 8 and stuff like that
 add_action( 'gform_after_submission_1', 'dlin_update_custom_tax', 10, 2 );

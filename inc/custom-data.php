@@ -149,3 +149,106 @@ function create_update_type_taxonomies()
 }
 
 
+
+//application custom post type
+
+// Register Custom Post Type application
+// Post Type Key: application
+
+function create_application_cpt() {
+
+  $labels = array(
+    'name' => __( 'Applications', 'Post Type General Name', 'textdomain' ),
+    'singular_name' => __( 'Application', 'Post Type Singular Name', 'textdomain' ),
+    'menu_name' => __( 'Application', 'textdomain' ),
+    'name_admin_bar' => __( 'Application', 'textdomain' ),
+    'archives' => __( 'Application Archives', 'textdomain' ),
+    'attributes' => __( 'Application Attributes', 'textdomain' ),
+    'parent_item_colon' => __( 'Application:', 'textdomain' ),
+    'all_items' => __( 'All Applications', 'textdomain' ),
+    'add_new_item' => __( 'Add New Application', 'textdomain' ),
+    'add_new' => __( 'Add New', 'textdomain' ),
+    'new_item' => __( 'New Application', 'textdomain' ),
+    'edit_item' => __( 'Edit Application', 'textdomain' ),
+    'update_item' => __( 'Update Application', 'textdomain' ),
+    'view_item' => __( 'View Application', 'textdomain' ),
+    'view_items' => __( 'View Applications', 'textdomain' ),
+    'search_items' => __( 'Search Applications', 'textdomain' ),
+    'not_found' => __( 'Not found', 'textdomain' ),
+    'not_found_in_trash' => __( 'Not found in Trash', 'textdomain' ),
+    'featured_image' => __( 'Featured Image', 'textdomain' ),
+    'set_featured_image' => __( 'Set featured image', 'textdomain' ),
+    'remove_featured_image' => __( 'Remove featured image', 'textdomain' ),
+    'use_featured_image' => __( 'Use as featured image', 'textdomain' ),
+    'insert_into_item' => __( 'Insert into application', 'textdomain' ),
+    'uploaded_to_this_item' => __( 'Uploaded to this application', 'textdomain' ),
+    'items_list' => __( 'Application list', 'textdomain' ),
+    'items_list_navigation' => __( 'Application list navigation', 'textdomain' ),
+    'filter_items_list' => __( 'Filter Application list', 'textdomain' ),
+  );
+  $args = array(
+    'label' => __( 'application', 'textdomain' ),
+    'description' => __( '', 'textdomain' ),
+    'labels' => $labels,
+    'menu_icon' => '',
+    'supports' => array('title', 'editor', 'revisions', 'author', 'trackbacks', 'custom-fields', 'thumbnail',),
+    'taxonomies' => array('category', 'post_tag', 'software'),
+    'public' => true,
+    'show_ui' => true,
+    'show_in_menu' => true,
+    'menu_position' => 5,
+    'show_in_admin_bar' => true,
+    'show_in_nav_menus' => true,
+    'can_export' => true,
+    'has_archive' => true,
+    'hierarchical' => false,
+    'exclude_from_search' => false,
+    'show_in_rest' => true,
+    'publicly_queryable' => true,
+    'capability_type' => 'post',
+    'menu_icon' => 'dashicons-universal-access-alt',
+  );
+  register_post_type( 'application', $args );
+  
+  // flush rewrite rules because we changed the permalink structure
+  global $wp_rewrite;
+  $wp_rewrite->flush_rules();
+}
+add_action( 'init', 'create_application_cpt', 0 );
+
+add_action( 'init', 'create_level_taxonomies', 0 );
+function create_level_taxonomies()
+{
+  // Add new taxonomy, NOT hierarchical (like tags)
+  $labels = array(
+    'name' => _x( 'Levels', 'taxonomy general name' ),
+    'singular_name' => _x( 'level', 'taxonomy singular name' ),
+    'search_items' =>  __( 'Search Levels' ),
+    'popular_items' => __( 'Popular Levels' ),
+    'all_items' => __( 'All Levels' ),
+    'parent_item' => null,
+    'parent_item_colon' => null,
+    'edit_item' => __( 'Edit Levels' ),
+    'update_item' => __( 'Update level' ),
+    'add_new_item' => __( 'Add New level' ),
+    'new_item_name' => __( 'New level' ),
+    'add_or_remove_items' => __( 'Add or remove Levels' ),
+    'choose_from_most_used' => __( 'Choose from the most used Levels' ),
+    'menu_name' => __( 'level' ),
+  );
+
+//registers taxonomy specific post types - default is just post
+  register_taxonomy('level',array('application'), array(
+    'hierarchical' => true,
+    'labels' => $labels,
+    'show_ui' => true,
+    'update_count_callback' => '_update_post_term_count',
+    'query_var' => true,
+    'rewrite' => array( 'slug' => 'level' ),
+    'show_in_rest'          => true,
+    'rest_base'             => 'level',
+    'rest_controller_class' => 'WP_REST_Terms_Controller',
+    'show_in_nav_menus' => true,    
+  ));
+}
+

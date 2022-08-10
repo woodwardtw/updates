@@ -140,26 +140,28 @@ function dlinq_update_populate_type( $form ) {
 function dlinq_update_show_software(){
 	if(get_field('software')){
 		$softwares = get_field('software');
-		echo "<h2>Software</h2>";
+		echo "<div class='col-md-6'><h2>Software</h2>";
 		foreach ($softwares as $software){
 				$term_id = $software->term_id;
 				$title = $software->name;
 				$link = get_term_link($term_id, 'software');
 				echo "<div class='link-box'><a class='software cat-link' href='{$link}'>$title</a></div>";
 			}
+		echo "</div>";
 	}	
 }
 
 function dlinq_update_show_type(){
 	if(get_field('update_type')){
 		$updates = get_field('update_type');
-		echo "<h2>Update Type</h2>";
+		echo "<div class='col-md-6'><h2>Update Type</h2>";
 		foreach ($updates as $update){
 				$term_id = $update->term_id;
 				$title = $update->name;
 				$link = get_term_link($term_id, 'update-types');
 				echo "<div class='link-box'><a class='type cat-link' href='{$link}'>$title</a></div>";
 			}
+		echo "</div>";
 	}	
 }
 

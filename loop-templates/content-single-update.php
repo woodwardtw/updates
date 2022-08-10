@@ -29,10 +29,15 @@ defined( 'ABSPATH' ) || exit;
 
 		<?php
 		the_content();
-		dlinq_update_show_software();
-		dlinq_update_show_type();
-		understrap_link_pages();
+
+		//understrap_link_pages();
 		?>
+		<div class="row">
+			<?php 
+				dlinq_update_show_software();
+				dlinq_update_show_type();
+			?>
+		</div>
 
 	</div><!-- .entry-content -->
 

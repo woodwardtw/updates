@@ -16,8 +16,8 @@ defined( 'ABSPATH' ) || exit;
 		<?php the_title( '<h1 class="entry-title">', '</h1>' ); ?>
 
 		<div class="entry-meta">
-
-			<?php understrap_posted_on(); ?>
+			<div class="created">Created: <?php echo get_the_date(); ?></div>
+			<div class="modified">Modified: <?php echo get_the_modified_date(); ?></div>
 
 		</div><!-- .entry-meta -->
 

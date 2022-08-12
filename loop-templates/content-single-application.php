@@ -25,23 +25,30 @@ defined( 'ABSPATH' ) || exit;
 
 	<?php echo get_the_post_thumbnail( $post->ID, 'large' ); ?>
 
-	<div class="entry-content">
-		<div class="purpose">
+	<div class="entry-content row">
+		<div class="purpose col-md-12">
 			<h2>Purpose</h2>
 			<?php dlinq_update_generic_text('what_does_it_do','Please give me purpose.');?>
 		</div>
-		<div class="users">
-			<h2>Primary Users</h2>
-			<?php dlinq_update_generic_text('primary_users','I need to be associated with someone.');?>
+
+		<div class="col-md-3">
+			<div class="users">
+				<h2>Primary Users</h2>
+				<?php dlinq_update_generic_text('primary_users','I need to be associated with someone.');?>
+			</div>
 		</div>
-		<div class="license">
-			<h2>License Details</h2>
-			<?php dlinq_update_generic_text('license_details','I need to be boundaries.');?>
+		<div class="col-md-3">
+			<div class="license">
+				<h2>License Details</h2>
+				<?php dlinq_update_generic_text('license_details','I need to be boundaries.');?>
+			</div>
 		</div>
-		<div class="update-box">
-			<h2>Updates</h2>
-			<div class="updates">
-				<?php dlinq_update_app_updates();?>
+		<div class="col-md-8 offset-md-2">
+			<div class="update-box">
+				<h2>Updates</h2>
+				<div class="updates">
+					<?php dlinq_update_app_updates();?>
+				</div>
 			</div>
 		</div>
 		<?php

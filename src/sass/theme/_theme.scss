@@ -420,6 +420,15 @@ to {background-color: green}
     padding-left: 0;
 }
 
+.update {
+	padding: 20px;
+	margin: 10px 0;
+}
+
+.update:nth-child(even) {
+	background-color: $light-blue;
+}
+
 @media (max-width: 768px){
 
 	#right-sidebar {

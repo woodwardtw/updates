@@ -54,7 +54,7 @@ function dlinq_update_app_updates(){
         $title = get_the_title();
         $link = get_the_permalink();
         $content = get_the_content();
-        echo "<div class='update'><h3><a href='{$link}'>{$title}</a></h3><p>{$content}</p></div>";
+        echo "<div class='update'><a href='{$link}'>{$title}</a><p>{$content}</p></div>";
     endwhile;
     endif;
 

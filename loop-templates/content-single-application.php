@@ -38,8 +38,11 @@ defined( 'ABSPATH' ) || exit;
 			<h2>License Details</h2>
 			<?php dlinq_update_generic_text('license_details','I need to be boundaries.');?>
 		</div>
-		<div class="updates">
-			<?php dlinq_update_app_updates();?>
+		<div class="update-box">
+			<h2>Updates</h2>
+			<div class="updates">
+				<?php dlinq_update_app_updates();?>
+			</div>
 		</div>
 		<?php
 		// the_content();

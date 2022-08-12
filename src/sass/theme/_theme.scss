@@ -429,6 +429,11 @@ to {background-color: green}
 	background-color: $light-blue;
 }
 
+.update a {
+	font-size: 1.2rem;
+	font-weight: 700;
+}
+
 @media (max-width: 768px){
 
 	#right-sidebar {

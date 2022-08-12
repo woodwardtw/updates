@@ -17506,6 +17506,11 @@ h2:target, .h2:target, h3:target, .h3:target, h4:target, .h4:target, ol:target, 
   background-color: #e5f1fa;
 }
 
+.update a {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
 @media (max-width: 768px) {
   #right-sidebar {
     padding-left: 10px;

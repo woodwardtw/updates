@@ -53,8 +53,12 @@ function dlinq_update_app_updates(){
       // Do Stuff
         $title = get_the_title();
         $link = get_the_permalink();
+        $date = get_the_date();
         $content = get_the_content();
-        echo "<div class='update'><a href='{$link}'>{$title}</a><p>{$content}</p></div>";
+        echo "<div class='update'>
+                <a href='{$link}'>{$title}</a> - {$date}
+                <p>{$content}</p>
+            </div>";
     endwhile;
     endif;
 

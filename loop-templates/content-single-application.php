@@ -31,13 +31,13 @@ defined( 'ABSPATH' ) || exit;
 			<?php dlinq_update_generic_text('what_does_it_do','Please give me purpose.');?>
 		</div>
 
-		<div class="col-md-3">
+		<div class="col-md-4">
 			<div class="users">
 				<h2>Primary Users</h2>
 				<?php dlinq_update_generic_text('primary_users','I need to be associated with someone.');?>
 			</div>
 		</div>
-		<div class="col-md-3">
+		<div class="col-md-4">
 			<div class="license">
 				<h2>License Details</h2>
 				<?php dlinq_update_generic_text('license_details','I need to be boundaries.');?>

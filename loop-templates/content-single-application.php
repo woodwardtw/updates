@@ -43,7 +43,13 @@ defined( 'ABSPATH' ) || exit;
 				<?php dlinq_update_generic_text('license_details','I need to be bounded.');?>
 				<?php dlinq_update_big_audience();?>
 			</div>
-		</div>		
+		</div>
+		<div class="col-md-4">
+			<div class="renewal">
+				<h2>Use Restrictions</h2>
+				<?php dlinq_update_uses();?>
+			</div>
+		</div>
 		<div class="col-md-4">
 			<div class="renewal">
 				<h2>Renewal Date</h2>

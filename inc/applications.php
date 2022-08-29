@@ -57,8 +57,23 @@ function dlinq_update_big_audience(){
     } else {
         echo 'No enterprise audiences.';
     }
-
 }
+
+function dlinq_update_uses(){
+    if(get_field('allowed_use_types')){
+        $cats = get_field('allowed_use_types');
+        foreach ($cats as $key => $value) {
+            // code...
+            $term_id = $value->term_id;
+            $title = $value->name;
+            $link = get_term_link($term_id);
+            echo "<div class='software-license'><a href='{$link}'>{$title}</a></div>";
+        }
+    } else {
+        echo 'No usage restrictions.';
+    }
+}
+
 
 function dlinq_update_vendor_details(){
     $html = '';

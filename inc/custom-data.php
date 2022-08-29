@@ -234,7 +234,7 @@ function create_level_taxonomies()
     'new_item_name' => __( 'New level' ),
     'add_or_remove_items' => __( 'Add or remove Levels' ),
     'choose_from_most_used' => __( 'Choose from the most used Levels' ),
-    'menu_name' => __( 'level' ),
+    'menu_name' => __( 'Level' ),
   );
 
 //registers taxonomy specific post types - default is just post
@@ -247,6 +247,43 @@ function create_level_taxonomies()
     'rewrite' => array( 'slug' => 'level' ),
     'show_in_rest'          => true,
     'rest_base'             => 'level',
+    'rest_controller_class' => 'WP_REST_Terms_Controller',
+    'show_in_nav_menus' => true,    
+  ));
+}
+
+
+add_action( 'init', 'create_license_taxonomies', 0 );
+function create_license_taxonomies()
+{
+  // Add new taxonomy, NOT hierarchical (like tags)
+  $labels = array(
+    'name' => _x( 'Licenses', 'taxonomy general name' ),
+    'singular_name' => _x( 'license', 'taxonomy singular name' ),
+    'search_items' =>  __( 'Search Licenses' ),
+    'popular_items' => __( 'Popular Licenses' ),
+    'all_items' => __( 'All Licenses' ),
+    'parent_item' => null,
+    'parent_item_colon' => null,
+    'edit_item' => __( 'Edit Licenses' ),
+    'update_item' => __( 'Update license' ),
+    'add_new_item' => __( 'Add New license' ),
+    'new_item_name' => __( 'New license' ),
+    'add_or_remove_items' => __( 'Add or remove Licenses' ),
+    'choose_from_most_used' => __( 'Choose from the most used Licenses' ),
+    'menu_name' => __( 'License' ),
+  );
+
+//registers taxonomy specific post types - default is just post
+  register_taxonomy('licenses',array('application'), array(
+    'hierarchical' => true,
+    'labels' => $labels,
+    'show_ui' => true,
+    'update_count_callback' => '_update_post_term_count',
+    'query_var' => true,
+    'rewrite' => array( 'slug' => 'license' ),
+    'show_in_rest'          => true,
+    'rest_base'             => 'license',
     'rest_controller_class' => 'WP_REST_Terms_Controller',
     'show_in_nav_menus' => true,    
   ));

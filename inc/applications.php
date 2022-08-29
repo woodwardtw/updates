@@ -37,8 +37,27 @@ function dlinq_update_software_cat(){
             $link = get_term_link($term_id);
             echo "<div class='software-cat'><a href='{$link}'>{$title}</a></div>";
         }
-
+    } else {
+        echo 'I lack definition.';
     }
+}
+
+function dlinq_update_big_audience(){
+    if(get_field('license_audiences')){
+        $cats = get_field('license_audiences');
+        echo "<div class='audiences'><strong>Enterprise Audiences</strong>";
+        foreach ($cats as $key => $value) {
+            // code...
+            $term_id = $value->term_id;
+            $title = $value->name;
+            $link = get_term_link($term_id);
+            echo "<div class='software-license'><a href='{$link}'>{$title}</a></div>";
+        }
+        echo '</div>';
+    } else {
+        echo 'No enterprise audiences.';
+    }
+
 }
 
 function dlinq_update_vendor_details(){
@@ -51,6 +70,9 @@ function dlinq_update_vendor_details(){
     if (get_field('vendor_contact')){
         $contact = get_field('vendor_contact');
         $html .= $contact;
+    }
+    if(!get_field('vendor_url') && get_field('vendor_contact')){
+        $html = 'I lack vendor contact';
     }
     echo $html;
 }
@@ -77,19 +99,18 @@ function dlinq_update_app_updates(){
     //var_dump($the_query);
     // The Loop
     if ( $the_query->have_posts() ) :
-    while ( $the_query->have_posts() ) : $the_query->the_post();
-      // Do Stuff
-        $title = get_the_title();
-        $link = get_the_permalink();
-        $date = get_the_date();
-        $content = get_the_content();
-        echo "<div class='update'>
-                <a href='{$link}'>{$title}</a> - {$date}
-                <p>{$content}</p>
-            </div>";
-    endwhile;
-    endif;
-
+        while ( $the_query->have_posts() ) : $the_query->the_post();
+          // Do Stuff
+            $title = get_the_title();
+            $link = get_the_permalink();
+            $date = get_the_date();
+            $content = get_the_content();
+            echo "<div class='update'>
+                    <a href='{$link}'>{$title}</a> - {$date}
+                    <p>{$content}</p>
+                </div>";
+        endwhile;
+    endif;       
     // Reset Post Data
     wp_reset_postdata();    
 }

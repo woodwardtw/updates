@@ -41,6 +41,28 @@
             "delay": 0
         },
         {
+            "key": "field_630cffa46ed30",
+            "label": "License Audiences",
+            "name": "license_audiences",
+            "type": "taxonomy",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "taxonomy": "licenses",
+            "field_type": "checkbox",
+            "add_term": 1,
+            "save_terms": 0,
+            "load_terms": 0,
+            "return_format": "object",
+            "multiple": 0,
+            "allow_null": 0
+        },
+        {
             "key": "field_62f3eedf76edd",
             "label": "License Details",
             "name": "license_details",
@@ -182,5 +204,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1661793145
+    "modified": 1661796632
 }

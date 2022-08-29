@@ -27,6 +27,24 @@ function dlinq_update_generic_text($field_name,$alt_message){
     }
 }
 
+function dlinq_update_software_cat(){
+    echo 'foo';
+}
+
+function dlinq_update_vendor_details(){
+    $html = '';
+    if(get_field('vendor_url')){
+        $url = get_field('vendor_url');
+        $vendor_url = "<a href='{$url}'>{$url}</a>";
+        $html .= $vendor_url;
+    } 
+    if (get_field('vendor_contact')){
+        $contact = get_field('vendor_contact');
+        $html .= $contact;
+    }
+    echo $html;
+}
+
 function dlinq_update_app_updates(){
     global $post;
     $post_slug = $post->post_name;

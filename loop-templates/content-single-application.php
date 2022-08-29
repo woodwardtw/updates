@@ -26,7 +26,7 @@ defined( 'ABSPATH' ) || exit;
 	<?php echo get_the_post_thumbnail( $post->ID, 'large' ); ?>
 
 	<div class="entry-content row">
-		<div class="purpose col-md-12">
+		<div class="purpose col-md-8">
 			<h2>Purpose</h2>
 			<?php dlinq_update_generic_text('what_does_it_do','Please give me purpose.');?>
 		</div>
@@ -40,10 +40,34 @@ defined( 'ABSPATH' ) || exit;
 		<div class="col-md-4">
 			<div class="license">
 				<h2>License Details</h2>
-				<?php dlinq_update_generic_text('license_details','I need to be boundaries.');?>
+				<?php dlinq_update_generic_text('license_details','I need to be bounded.');?>
 			</div>
 		</div>
-		<div class="col-md-8 offset-md-2">
+		<div class="col-md-4">
+			<div class="renewal">
+				<h2>Renewal Date</h2>
+				<?php dlinq_update_generic_text('renewal_Date','I need a date.');?>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="cost">
+				<h2>Cost</h2>
+				<?php dlinq_update_generic_text('cost','I need a cost.');?>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="category">
+				<h2>Category</h2>
+				<?php dlinq_update_software_cat();?>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="vendor">
+				<h2>Vendor</h2>
+				<?php dlinq_update_vendor_details();?>
+			</div>
+		</div>
+		<div class="col-md-12">
 			<div class="update-box">
 				<h2>Updates</h2>
 				<div class="updates">

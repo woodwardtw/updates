@@ -9,14 +9,14 @@
 defined( 'ABSPATH' ) || exit;
 
 
-function dlinq_update_purpose(){
-    if(get_field('what_does_it_do')){
-        $purpose = get_field('what_does_it_do');
-        echo "{$purpose}";
-    } else {
-        echo "I lack purpose. Please give me some.";
-    }
-}
+// function dlinq_update_purpose(){
+//     if(get_field('what_does_it_do')){
+//         $purpose = get_field('what_does_it_do');
+//         echo "{$purpose}";
+//     } else {
+//         echo "I lack purpose. Please give me some.";
+//     }
+// }
 
 function dlinq_update_generic_text($field_name,$alt_message){
     if(get_field($field_name)){
@@ -28,7 +28,17 @@ function dlinq_update_generic_text($field_name,$alt_message){
 }
 
 function dlinq_update_software_cat(){
-    echo 'foo';
+    if(get_field('software_category')){
+        $cats = get_field('software_category');
+        foreach ($cats as $key => $value) {
+            // code...
+            $term_id = $value->term_id;
+            $title = $value->name;
+            $link = get_term_link($term_id);
+            echo "<div class='software-cat'><a href='{$link}'>{$title}</a></div>";
+        }
+
+    }
 }
 
 function dlinq_update_vendor_details(){

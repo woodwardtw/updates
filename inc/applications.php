@@ -120,9 +120,12 @@ function dlinq_update_app_updates(){
             $link = get_the_permalink();
             $date = get_the_date();
             $content = get_the_content();
+            $term_obj_list = get_the_terms( $post->ID, 'update-types' );
+            $cats = join(', ', wp_list_pluck($term_obj_list, 'name'));
             echo "<div class='update'>
                     <a href='{$link}'>{$title}</a> - {$date}
                     <p>{$content}</p>
+                    <div class='update-cats'>{$cats}</div>
                 </div>";
         endwhile;
     endif;       

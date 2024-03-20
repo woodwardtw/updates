@@ -20,10 +20,27 @@ defined( 'ABSPATH' ) || exit;
 
 function dlinq_update_generic_text($field_name,$alt_message){
     if(get_field($field_name)){
-        $field_text = get_field($field_name);
+        $field_obj = get_field_object($field_name);
+        $field_title =  $field_obj['label'];
+        $field_text = $field_obj['value']; 
+        //var_dump($field_obj);        
+        echo "<h2>{$field_title}</h2>";
         echo "{$field_text}";
     } else {
         echo $alt_message;
+    }
+}
+
+function dlinq_update_data(){
+    echo "<h2>Data</h2>";
+    if(get_field('data')){
+        $url = get_field('data');
+        if(str_contains($url, 'https://drive.google.com/drive/folders/')){
+            $url = str_replace('https://drive.google.com/drive/folders/', 'https://drive.google.com/embeddedfolderview?id=', $url);//replace with https://drive.google.com/embeddedfolderview?id=
+        }
+        echo "<iframe class='app-data' src='{$url}' width='100%'></iframe>";
+    }else{
+        echo "No data present.";
     }
 }
 

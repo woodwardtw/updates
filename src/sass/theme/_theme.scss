@@ -125,6 +125,12 @@ h2:target, h3:target, h4:target, ol:target, ul:target, div:target {
 }
 
 
+.data-block {
+	padding: 30px 0;
+	margin: 30px 0;
+	background-color: $light-blue;
+}
+
 .important, .note, .warning {
 	margin: 20px 0;
 	font-size: 1.3rem;

@@ -4,8 +4,9 @@
     "fields": [
         {
             "key": "field_62f3eebd01342",
-            "label": "What does it do?",
+            "label": "Goals",
             "name": "what_does_it_do",
+            "aria-label": "",
             "type": "wysiwyg",
             "instructions": "",
             "required": 0,
@@ -15,6 +16,7 @@
                 "class": "",
                 "id": ""
             },
+            "relevanssi_exclude": 0,
             "default_value": "",
             "tabs": "all",
             "toolbar": "full",
@@ -22,9 +24,48 @@
             "delay": 0
         },
         {
+            "key": "field_62f3ef8870c18",
+            "label": "Cost",
+            "name": "cost",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "33",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": "",
+            "maxlength": ""
+        },
+        {
+            "key": "field_65fae95d3790e",
+            "label": "Data",
+            "name": "data",
+            "aria-label": "",
+            "type": "url",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "relevanssi_exclude": 0,
+            "default_value": "",
+            "placeholder": ""
+        },
+        {
             "key": "field_62f3ee4f6681e",
             "label": "Primary Users",
             "name": "primary_users",
+            "aria-label": "",
             "type": "wysiwyg",
             "instructions": "",
             "required": 0,
@@ -44,6 +85,7 @@
             "key": "field_630cffa46ed30",
             "label": "License Audiences",
             "name": "license_audiences",
+            "aria-label": "",
             "type": "taxonomy",
             "instructions": "",
             "required": 0,
@@ -60,12 +102,14 @@
             "load_terms": 1,
             "return_format": "object",
             "multiple": 0,
-            "allow_null": 0
+            "allow_null": 0,
+            "bidirectional_target": []
         },
         {
             "key": "field_630d02095945f",
             "label": "Allowed Use Types",
             "name": "allowed_use_types",
+            "aria-label": "",
             "type": "taxonomy",
             "instructions": "",
             "required": 0,
@@ -82,12 +126,14 @@
             "load_terms": 1,
             "return_format": "object",
             "multiple": 0,
-            "allow_null": 0
+            "allow_null": 0,
+            "bidirectional_target": []
         },
         {
             "key": "field_62f3eedf76edd",
             "label": "License Details",
             "name": "license_details",
+            "aria-label": "",
             "type": "textarea",
             "instructions": "",
             "required": 0,
@@ -107,6 +153,7 @@
             "key": "field_62f3eef99a5a4",
             "label": "Renewal Date",
             "name": "renewal_date",
+            "aria-label": "",
             "type": "date_picker",
             "instructions": "",
             "required": 0,
@@ -121,28 +168,10 @@
             "first_day": 1
         },
         {
-            "key": "field_62f3ef8870c18",
-            "label": "Cost",
-            "name": "cost",
-            "type": "text",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "33",
-                "class": "",
-                "id": ""
-            },
-            "default_value": "",
-            "placeholder": "",
-            "prepend": "",
-            "append": "",
-            "maxlength": ""
-        },
-        {
             "key": "field_62f3efeb456d4",
             "label": "Software Category",
             "name": "software_category",
+            "aria-label": "",
             "type": "taxonomy",
             "instructions": "",
             "required": 0,
@@ -159,12 +188,14 @@
             "load_terms": 0,
             "return_format": "object",
             "multiple": 0,
-            "allow_null": 0
+            "allow_null": 0,
+            "bidirectional_target": []
         },
         {
             "key": "field_62f3f2ad849a9",
             "label": "Vendor URL",
             "name": "vendor_url",
+            "aria-label": "",
             "type": "url",
             "instructions": "",
             "required": 0,
@@ -181,6 +212,7 @@
             "key": "field_62f3f2cc849aa",
             "label": "Vendor Contact",
             "name": "vendor_contact",
+            "aria-label": "",
             "type": "wysiwyg",
             "instructions": "",
             "required": 0,
@@ -226,5 +258,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1661797254
+    "modified": 1710947263
 }

@@ -17215,6 +17215,10 @@ h2:target, .h2:target, h3:target, .h3:target, h4:target, .h4:target, ol:target, 
   background-color: #e5f1fa;
 }
 
+.entry-meta {
+  font-size: 0.8rem;
+}
+
 .important, .note, .warning {
   margin: 20px 0;
   font-size: 1.3rem;

@@ -169,7 +169,7 @@
         },
         {
             "key": "field_62f3efeb456d4",
-            "label": "Software Category",
+            "label": "Software Level",
             "name": "software_category",
             "aria-label": "",
             "type": "taxonomy",
@@ -181,12 +181,14 @@
                 "class": "",
                 "id": ""
             },
+            "relevanssi_exclude": 0,
             "taxonomy": "level",
-            "field_type": "checkbox",
             "add_term": 1,
-            "save_terms": 0,
-            "load_terms": 0,
+            "save_terms": 1,
+            "load_terms": 1,
             "return_format": "object",
+            "field_type": "checkbox",
+            "bidirectional": 0,
             "multiple": 0,
             "allow_null": 0,
             "bidirectional_target": []
@@ -258,5 +260,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1710947263
+    "modified": 1711022569
 }

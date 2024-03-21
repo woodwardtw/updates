@@ -131,6 +131,10 @@ h2:target, h3:target, h4:target, ol:target, ul:target, div:target {
 	background-color: $light-blue;
 }
 
+.entry-meta {
+	font-size: .8rem;
+}
+
 .important, .note, .warning {
 	margin: 20px 0;
 	font-size: 1.3rem;

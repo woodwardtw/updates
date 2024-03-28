@@ -149,3 +149,28 @@ function dlinq_update_app_updates(){
     // Reset Post Data
     wp_reset_postdata();    
 }
+
+
+function dlinq_update_history_repeater(){
+    $html = '';
+    if( have_rows('history') ):
+
+        // Loop through rows.
+        while( have_rows('history') ) : the_row();
+            // Load sub field value.
+            $date = substr(get_sub_field('date'),3,10);
+            $cost = '$'. number_format(get_sub_field('cost'), 2, ".", ",");
+            $details = get_sub_field('details');
+            $html .= "<div class='pay-history'>{$date} {$cost}
+                        <div class='pay-details'>{$details}</div>
+                    </div>";
+            // Do something...
+        // End loop.
+        endwhile;
+        return $html;
+        // No value.
+        else :
+            // Do something...
+        endif;
+    }
+

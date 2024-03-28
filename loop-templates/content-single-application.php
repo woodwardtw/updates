@@ -35,6 +35,7 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 			<div class="renewal">
 				<?php dlinq_update_generic_text('renewal_date','I need a date.');?>
+				<?php //dlinq_days_until();?>
 			</div>
 		</div>
 		<div class="col-md-12">
@@ -42,6 +43,12 @@ defined( 'ABSPATH' ) || exit;
 				<?php
 					dlinq_update_data();
 				?>
+			</div>
+		</div>
+		<div class="col-md-12">
+			<div class="pay-history">
+				<h2>History</h2>
+				<?php echo dlinq_update_history_repeater();?>
 			</div>
 		</div>		
 		<div class="col-md-4">

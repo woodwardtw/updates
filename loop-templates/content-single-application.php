@@ -26,31 +26,29 @@ defined( 'ABSPATH' ) || exit;
 	<?php echo get_the_post_thumbnail( $post->ID, 'large' ); ?>
 
 	<div class="entry-content row">
-		<div class="purpose col-md-8">			
+		<div class="purpose col-md-6">			
 			<?php dlinq_update_generic_text('what_does_it_do','Please give me purpose.');?>
 		</div>
-		<div class="col-md-4">
-			<div class="cost">
-				<?php dlinq_update_generic_text('cost','I need a cost.');?>
-			</div>
-			<div class="renewal">
-				<?php dlinq_update_generic_text('renewal_date','I need a date.');?>
-				<?php //dlinq_days_until();?>
-			</div>
-		</div>
-		<div class="col-md-12">
+		<div class="col-md-6">
 			<div class="data-block">
 				<?php
 					dlinq_update_data();
 				?>
 			</div>
 		</div>
-		<div class="col-md-12">
+		<div class="col-md-4">
 			<div class="pay-history">
 				<h2>History</h2>
 				<?php echo dlinq_update_history_repeater();?>
 			</div>
-		</div>		
+		</div>	
+		<div class="col-md-4">
+			<div class="renewal">
+				<?php dlinq_update_generic_text('renewal_date','I need a date.');?>
+				<?php //dlinq_days_until();?>
+			</div>
+		</div>	
+				
 		<div class="col-md-4">
 			<div class="license">
 				<?php dlinq_update_generic_text('license_details','I need to be bounded.');?>

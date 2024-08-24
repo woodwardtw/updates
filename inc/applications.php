@@ -158,10 +158,12 @@ function dlinq_update_history_repeater(){
         // Loop through rows.
         while( have_rows('history') ) : the_row();
             // Load sub field value.
-            $date = substr(get_sub_field('date'),3,10);
+            $date = substr(get_sub_field('date'),6,10);
+            
+            //$license_year = $date->format("Y");
             $cost = '$'. number_format(get_sub_field('cost'), 2, ".", ",");
             $details = get_sub_field('details');
-            $html .= "<div class='pay-history'>{$date} {$cost}
+            $html .= "<div class='pay-history'>{$date} - {$cost}
                         <div class='pay-details'>{$details}</div>
                     </div>";
             // Do something...
@@ -174,3 +176,37 @@ function dlinq_update_history_repeater(){
         endif;
     }
 
+
+//SORT payment history so years go recent to oldest
+function updates_reorder_cost_history( $value, $post_id, $field ) {
+    
+    // vars
+    $order = array();
+    
+    
+    // bail early if no value
+    if( empty($value) ) {
+        
+        return $value;
+        
+    }
+    
+    
+    // populate order
+    foreach( $value as $i => $row ) {
+        
+        $order[ $i ] = $row['field_65fdc12aa13ce'];
+        
+    }
+    
+    
+    // multisort
+    array_multisort( $order, SORT_DESC, $value );
+    
+    
+    // return   
+    return $value;
+    
+}
+
+add_filter('acf/load_value/name=history', 'updates_reorder_cost_history', 10, 3);

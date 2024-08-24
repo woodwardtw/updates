@@ -24,26 +24,6 @@
             "delay": 0
         },
         {
-            "key": "field_62f3ef8870c18",
-            "label": "Cost",
-            "name": "cost",
-            "aria-label": "",
-            "type": "text",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "33",
-                "class": "",
-                "id": ""
-            },
-            "default_value": "",
-            "placeholder": "",
-            "prepend": "",
-            "append": "",
-            "maxlength": ""
-        },
-        {
             "key": "field_65fae95d3790e",
             "label": "Data",
             "name": "data",
@@ -53,33 +33,13 @@
             "required": 0,
             "conditional_logic": 0,
             "wrapper": {
-                "width": "",
+                "width": "50",
                 "class": "",
                 "id": ""
             },
             "relevanssi_exclude": 0,
             "default_value": "",
             "placeholder": ""
-        },
-        {
-            "key": "field_62f3ee4f6681e",
-            "label": "Primary Users",
-            "name": "primary_users",
-            "aria-label": "",
-            "type": "wysiwyg",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "50",
-                "class": "",
-                "id": ""
-            },
-            "default_value": "",
-            "tabs": "all",
-            "toolbar": "full",
-            "media_upload": 0,
-            "delay": 0
         },
         {
             "key": "field_630cffa46ed30",
@@ -232,7 +192,7 @@
         },
         {
             "key": "field_65fdc118a13cd",
-            "label": "History",
+            "label": "Cost History",
             "name": "history",
             "aria-label": "",
             "type": "repeater",
@@ -351,5 +311,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1711128946
+    "modified": 1716914226
 }

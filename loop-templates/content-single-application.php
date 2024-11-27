@@ -18,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
 		<div class="entry-meta">
 			<div class="created">Created: <?php echo get_the_date(); ?></div>
 			<div class="modified">Modified: <?php echo get_the_modified_date(); ?></div>
-
+			<?php updates_gf_form_fields();?>
 		</div><!-- .entry-meta -->
 
 	</header><!-- .entry-header -->

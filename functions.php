@@ -167,6 +167,54 @@ function dlinq_update_show_type(){
 }
 
 
+/*GRAVITY FORMS SURVEY*/
+
+
+//this would be faculty specific and app specific
+function updates_gf_survey(){
+	$form_id = 2;
+	$search_criteria = array(
+	    'status'        => 'active',
+		    'field_filters' => array(
+		        'mode' => 'any',
+		        array(
+		            'key'   => '11.1',//11 is qualtrics 
+		            'operator' => 'isnot',
+		            'value' => ''
+		        ),
+		        array(
+		            'key'   => '11.2',
+		            'operator' => 'isnot',
+		            'value' => ''
+		        )
+		    )
+		);
+ 
+	$result = GFAPI::get_entries( $form_id, $search_criteria);
+	echo '<pre>';
+	 print_r($result);
+	 echo '</pre>';
+
+}
+
+add_shortcode('test','updates_gf_survey');
+
+function updates_gf_form_fields(){
+	$form_id = 2;
+	$form = GFAPI::get_form( $form_id );
+	$fields = GFAPI::get_fields_by_type( $form, array( 'checkbox' ), true );
+	//var_dump($fields);
+	foreach ($fields as $key => $field) {
+		// code...
+		echo $field['id'] . ' - ' . $field['label'] . '</br>';
+	}
+
+}
+
+//for the software page we can do this The GFAPI::count_entries() method is used to get a count of all entries that match the given arguments.
+
+
+
 //save acf json
 add_filter('acf/settings/save_json', 'dlinq_updates_json_save_point');
  

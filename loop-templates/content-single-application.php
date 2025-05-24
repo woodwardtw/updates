@@ -18,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
 		<div class="entry-meta">
 			<div class="created">Created: <?php echo get_the_date(); ?></div>
 			<div class="modified">Modified: <?php echo get_the_modified_date(); ?></div>
-			<?php updates_gf_form_fields();?>
+			<?php //updates_gf_form_fields();?>
 		</div><!-- .entry-meta -->
 
 	</header><!-- .entry-header -->
@@ -27,7 +27,7 @@ defined( 'ABSPATH' ) || exit;
 
 	<div class="entry-content row">
 		<div class="purpose col-md-6">			
-			<?php dlinq_update_generic_text('what_does_it_do','Please give me purpose.');?>
+			<?php dlinq_update_generic_text('what_does_it_do','<p>Please give me purpose.</p>');?>
 		</div>
 		<div class="col-md-6">
 			<div class="data-block">
@@ -44,14 +44,14 @@ defined( 'ABSPATH' ) || exit;
 		</div>	
 		<div class="col-md-4">
 			<div class="renewal">
-				<?php dlinq_update_generic_text('renewal_date','I need a date.');?>
+				<?php dlinq_update_generic_text('renewal_date','<p>I need a date.</p>');?>
 				<?php //dlinq_days_until();?>
 			</div>
 		</div>	
 				
 		<div class="col-md-4">
 			<div class="license">
-				<?php dlinq_update_generic_text('license_details','I need to be bounded.');?>
+				<?php dlinq_update_generic_text('license_details','<p>I need to be bounded.</p>');?>
 				<?php dlinq_update_big_audience();?>
 			</div>
 		</div>	
@@ -69,7 +69,7 @@ defined( 'ABSPATH' ) || exit;
 		</div>
 		<div class="col-md-4">
 			<div class="users">
-				<?php dlinq_update_generic_text('primary_users','I need to be associated with someone.');?>
+				<?php dlinq_update_generic_text('primary_users','<p>I need to be associated with someone.</p>');?>
 			</div>
 		</div>						
 		<div class="col-md-12">

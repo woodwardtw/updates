@@ -51,7 +51,7 @@ function create_update_cpt() {
     'labels' => $labels,
     'menu_icon' => '',
     'supports' => array('title', 'editor', 'revisions', 'author', 'trackbacks', 'custom-fields', 'thumbnail',),
-    'taxonomies' => array('category', 'post_tag'),
+    'taxonomies' => array('category', 'post_tag', 'theme', 'discipline'),
     'public' => true,
     'show_ui' => true,
     'show_in_menu' => true,
@@ -192,7 +192,7 @@ function create_application_cpt() {
     'labels' => $labels,
     'menu_icon' => '',
     'supports' => array('title', 'editor', 'revisions', 'author', 'trackbacks', 'custom-fields', 'thumbnail',),
-    'taxonomies' => array('category', 'post_tag', 'software'),
+    'taxonomies' => array('category', 'post_tag', 'software', 'theme', 'discipline'),
     'public' => true,
     'show_ui' => true,
     'show_in_menu' => true,
@@ -323,5 +323,84 @@ function create_use_taxonomies()
     'rest_controller_class' => 'WP_REST_Terms_Controller',
     'show_in_nav_menus' => true,    
   ));
+}
+
+// Theme taxonomy
+add_action( 'init', 'create_theme_taxonomies', 0 );
+function create_theme_taxonomies()
+{
+  // Add new taxonomy, hierarchical like categories
+  $labels = array(
+    'name' => _x( 'Themes', 'taxonomy general name' ),
+    'singular_name' => _x( 'Theme', 'taxonomy singular name' ),
+    'search_items' =>  __( 'Search Themes' ),
+    'popular_items' => __( 'Popular Themes' ),
+    'all_items' => __( 'All Themes' ),
+    'parent_item' => __( 'Parent Theme' ),
+    'parent_item_colon' => __( 'Parent Theme:' ),
+    'edit_item' => __( 'Edit Theme' ),
+    'update_item' => __( 'Update Theme' ),
+    'add_new_item' => __( 'Add New Theme' ),
+    'new_item_name' => __( 'New Theme' ),
+    'add_or_remove_items' => __( 'Add or remove Themes' ),
+    'choose_from_most_used' => __( 'Choose from the most used Themes' ),
+    'menu_name' => __( 'Themes' ),
+  );
+
+//register taxonomy for updates and applications
+  register_taxonomy('theme',array('update','application'), array(
+    'hierarchical' => true,
+    'labels' => $labels,
+    'show_ui' => true,
+    'update_count_callback' => '_update_post_term_count',
+    'query_var' => true,
+    'rewrite' => array( 'slug' => 'theme' ),
+    'show_in_rest'          => true,
+    'rest_base'             => 'theme',
+    'rest_controller_class' => 'WP_REST_Terms_Controller',
+    'show_in_nav_menus' => true,
+  ));
+
+  // flush rewrite rules for new taxonomy slug
+  global $wp_rewrite;
+  $wp_rewrite->flush_rules();
+}
+
+// Discipline taxonomy
+add_action( 'init', 'create_discipline_taxonomies', 0 );
+function create_discipline_taxonomies()
+{
+  $labels = array(
+    'name' => _x( 'Disciplines', 'taxonomy general name' ),
+    'singular_name' => _x( 'Discipline', 'taxonomy singular name' ),
+    'search_items' =>  __( 'Search Disciplines' ),
+    'popular_items' => __( 'Popular Disciplines' ),
+    'all_items' => __( 'All Disciplines' ),
+    'parent_item' => __( 'Parent Discipline' ),
+    'parent_item_colon' => __( 'Parent Discipline:' ),
+    'edit_item' => __( 'Edit Discipline' ),
+    'update_item' => __( 'Update Discipline' ),
+    'add_new_item' => __( 'Add New Discipline' ),
+    'new_item_name' => __( 'New Discipline' ),
+    'add_or_remove_items' => __( 'Add or remove Disciplines' ),
+    'choose_from_most_used' => __( 'Choose from the most used Disciplines' ),
+    'menu_name' => __( 'Disciplines' ),
+  );
+
+  register_taxonomy('discipline',array('update','application'), array(
+    'hierarchical' => true,
+    'labels' => $labels,
+    'show_ui' => true,
+    'update_count_callback' => '_update_post_term_count',
+    'query_var' => true,
+    'rewrite' => array( 'slug' => 'discipline' ),
+    'show_in_rest'          => true,
+    'rest_base'             => 'discipline',
+    'rest_controller_class' => 'WP_REST_Terms_Controller',
+    'show_in_nav_menus' => true,
+  ));
+
+  global $wp_rewrite;
+  $wp_rewrite->flush_rules();
 }
 

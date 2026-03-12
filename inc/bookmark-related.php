@@ -53,6 +53,13 @@ function update_strip_tracking_params( $url ) {
         '_hsenc', '_hsmi',
         // Marketo
         'mkt_tok',
+        // Branch.io deep-link / click tracking (also covers %24deep_link, %243p)
+        '$deep_link', '$3p', '_branch_match_id', '_branch_referrer',
+        '_branch_match_id_from_pasteboard',
+        // Generic referral tracking (used by Reddit email digest, newsletters, etc.)
+        'ref_campaign', 'ref_source',
+        // Generic session/correlation IDs
+        'correlation_id',
     ) );
 
     $parsed = wp_parse_url( $url );
@@ -297,8 +304,9 @@ add_action( 'admin_footer-press-this.php', function() {
                 buildPanel( 'pt-theme-panel',      '<?php echo esc_js( __( 'Themes',      'understrap' ) ); ?>', themeTerms ) +
                 buildPanel( 'pt-discipline-panel', '<?php echo esc_js( __( 'Disciplines', 'understrap' ) ); ?>', disciplineTerms );
 
+            var refNode = componentsPanel.firstChild;
             while ( wrapper.firstChild ) {
-                componentsPanel.appendChild( wrapper.firstChild );
+                componentsPanel.insertBefore( wrapper.firstChild, refNode );
             }
         } );
         observer.observe( appEl, { childList: true, subtree: true } );

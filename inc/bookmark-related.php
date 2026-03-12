@@ -148,6 +148,9 @@ add_filter( 'press_this_save_post', function( $data ) {
             if ( ! empty( $stored['discipline'] ) ) {
                 $data['tax_input']['discipline'] = $stored['discipline'];
             }
+            if ( ! empty( $stored['software'] ) ) {
+                $data['tax_input']['software'] = $stored['software'];
+            }
         }
     }
 
@@ -171,10 +174,10 @@ add_action( 'wp_ajax_pt_store_taxonomy', function() {
 
     $theme_ids      = array_filter( array_map( 'absint', (array) ( $_POST['theme']      ?? array() ) ) );
     $discipline_ids = array_filter( array_map( 'absint', (array) ( $_POST['discipline'] ?? array() ) ) );
-
+    $software_ids   = array_filter( array_map( 'absint', (array) ( $_POST['software']   ?? array() ) ) );
     set_transient(
         'pt_tax_' . $post_id,
-        array( 'theme' => $theme_ids, 'discipline' => $discipline_ids ),
+        array( 'theme' => $theme_ids, 'discipline' => $discipline_ids, 'software' => $software_ids ),
         5 * MINUTE_IN_SECONDS
     );
 
@@ -217,6 +220,7 @@ add_action( 'admin_footer-press-this.php', function() {
 
     $theme_terms      = get_terms( array( 'taxonomy' => 'theme',      'hide_empty' => false ) );
     $discipline_terms = get_terms( array( 'taxonomy' => 'discipline', 'hide_empty' => false ) );
+    $software_terms = get_terms( array( 'taxonomy' => 'software', 'hide_empty' => false ) );
 
     $theme_data = array();
     foreach ( (array) $theme_terms as $t ) {
@@ -226,6 +230,10 @@ add_action( 'admin_footer-press-this.php', function() {
     foreach ( (array) $discipline_terms as $t ) {
         $discipline_data[] = array( 'id' => (int) $t->term_id, 'name' => $t->name, 'parent' => (int) $t->parent );
     }
+    $software_data = array();
+    foreach ( (array) $software_terms as $t ) {
+        $software_data[] = array( 'id' => (int) $t->term_id, 'name' => $t->name, 'parent' => (int) $t->parent );
+    }
 
     $arrow_svg = '<svg class="components-panel__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M17.5 11.6L12 16l-5.5-4.4.9-1.2L12 14.1l4.5-3.6 1 1.1z"/></svg>';
     ?>
@@ -233,6 +241,7 @@ add_action( 'admin_footer-press-this.php', function() {
     (function() {
         var themeTerms      = <?php echo wp_json_encode( $theme_data ); ?>;
         var disciplineTerms = <?php echo wp_json_encode( $discipline_data ); ?>;
+        var softwareTerms   = <?php echo wp_json_encode( $software_data ); ?>;
         var arrowSVG        = <?php echo wp_json_encode( $arrow_svg ); ?>;
         var ajaxUrl         = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
         var taxNonce        = <?php echo wp_json_encode( wp_create_nonce( 'pt_store_taxonomy' ) ); ?>;
@@ -302,8 +311,8 @@ add_action( 'admin_footer-press-this.php', function() {
             var wrapper = document.createElement( 'div' );
             wrapper.innerHTML =
                 buildPanel( 'pt-theme-panel',      '<?php echo esc_js( __( 'Themes',      'understrap' ) ); ?>', themeTerms ) +
-                buildPanel( 'pt-discipline-panel', '<?php echo esc_js( __( 'Disciplines', 'understrap' ) ); ?>', disciplineTerms );
-
+                buildPanel( 'pt-discipline-panel', '<?php echo esc_js( __( 'Disciplines', 'understrap' ) ); ?>', disciplineTerms ) +
+                buildPanel( 'pt-software-panel',   '<?php echo esc_js( __( 'Software',    'understrap' ) ); ?>', softwareTerms );
             var refNode = componentsPanel.firstChild;
             while ( wrapper.firstChild ) {
                 componentsPanel.insertBefore( wrapper.firstChild, refNode );
@@ -321,13 +330,14 @@ add_action( 'admin_footer-press-this.php', function() {
 
         // Store selected term IDs server-side via AJAX so the press_this_save_post
         // PHP filter can apply them during the save. Returns a Promise.
-        function storeTaxonomyTerms( postId, themeIds, disciplineIds ) {
+        function storeTaxonomyTerms( postId, themeIds, disciplineIds, softwareIds ) {
             var formData = new FormData();
             formData.append( 'action',  'pt_store_taxonomy' );
             formData.append( 'nonce',   taxNonce );
             formData.append( 'post_id', postId );
             themeIds.forEach(      function( id ) { formData.append( 'theme[]',      id ); } );
             disciplineIds.forEach( function( id ) { formData.append( 'discipline[]', id ); } );
+            softwareIds.forEach(   function( id ) { formData.append( 'software[]',   id ); } );
             return origFetch( ajaxUrl, { method: 'POST', body: formData } )
                 .catch( function() {} ); // never block the save on AJAX failure
         }
@@ -352,12 +362,13 @@ add_action( 'admin_footer-press-this.php', function() {
 
                 var themeIds      = getCheckedIds( 'pt-theme-panel' );
                 var disciplineIds = getCheckedIds( 'pt-discipline-panel' );
+                var softwareIds   = getCheckedIds( 'pt-software-panel' );
                 var ptData        = window.pressThisData || {};
                 var postId        = ptData.postId;
 
                 // Store terms server-side first, then fire the press-this save.
-                var preSave = ( ( themeIds.length || disciplineIds.length ) && postId )
-                    ? storeTaxonomyTerms( postId, themeIds, disciplineIds )
+                var preSave = ( ( themeIds.length || disciplineIds.length || softwareIds.length ) && postId )
+                    ? storeTaxonomyTerms( postId, themeIds, disciplineIds, softwareIds )
                     : Promise.resolve();
 
                 return preSave
@@ -392,15 +403,18 @@ add_action( 'admin_footer-press-this.php', function() {
     <style>
     /* Hide panel content until is-opened; rotate arrow when open. */
     #pt-theme-panel .press-this-editor__categories,
-    #pt-discipline-panel .press-this-editor__categories {
+    #pt-discipline-panel .press-this-editor__categories,
+    #pt-software-panel .press-this-editor__categories {
         display: none;
     }
     #pt-theme-panel.is-opened .press-this-editor__categories,
-    #pt-discipline-panel.is-opened .press-this-editor__categories {
+    #pt-discipline-panel.is-opened .press-this-editor__categories,
+    #pt-software-panel.is-opened .press-this-editor__categories {
         display: block;
     }
     #pt-theme-panel.is-opened .components-panel__arrow,
-    #pt-discipline-panel.is-opened .components-panel__arrow {
+    #pt-discipline-panel.is-opened .components-panel__arrow,
+    #pt-software-panel.is-opened .components-panel__arrow {
         transform: translateY(-50%) rotate(180deg);
     }
     </style>

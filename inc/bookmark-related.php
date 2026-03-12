@@ -383,7 +383,7 @@ add_action( 'admin_footer-press-this.php', function() {
                                 if ( data && data.redirect ) {
                                     // Published — close the popup.
                                     // Return redirect-free response so React doesn't navigate.
-                                    window.close();
+                                    //window.close();
                                     return new Response(
                                         JSON.stringify( Object.assign( {}, data, { redirect: false } ) ),
                                         { status: 200, headers: { 'Content-Type': 'application/json' } }

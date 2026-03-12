@@ -5,69 +5,112 @@
  * @package Understrap
  */
 
-add_filter( 'press_this_save_post', function( $data )
-{
-  
-  $pattern = '/Source: <em><a href="([^"]+)"/';//regex to get source URL
+// -----------------------------------------------------------------------
+// Change post type to 'update' on save, extract source URL into ACF field,
+// and apply any taxonomy terms pre-stored by the JS before the save fired.
+// -----------------------------------------------------------------------
+add_filter( 'press_this_save_post', function( $data ) {
 
-   // Using preg_match to extract the URL
-   if (preg_match($pattern, $data['post_content'], $matches)) {
-       $url = $matches[1]; // The URL will be captured in the first capturing group
-       update_field( 'source_url', $url, $data['ID'] );//write source URL to custom field
-   } else {
-       //write_log("No URL found. Pattern: " . $pattern . " Content: " . $data['post_content']);
-   }
+    $pattern = '/Source: <em><a href="([^"]+)"/';//regex to get source URL
 
-    //---------------------------------------------------------------
-    //
-    $new_cpt    = 'update';              // new post type   
-    //---------------------------------------------------------------
+    if ( preg_match( $pattern, $data['post_content'], $matches ) ) {
+        $url = $matches[1];
+        update_field( 'source_url', $url, $data['ID'] );
+    }
 
+    $new_cpt     = 'update';
     $post_object = get_post_type_object( $new_cpt );
 
-    // Change the post type if current user can
-    if( 
-           isset( $post_object->cap->create_posts ) 
-        && current_user_can( $post_object->cap->create_posts ) 
-    ) 
-        $data['post_type']  = $new_cpt;
+    if (
+        isset( $post_object->cap->create_posts )
+        && current_user_can( $post_object->cap->create_posts )
+    ) {
+        $data['post_type'] = $new_cpt;
+    }
 
+    // Apply taxonomy terms that were stored in a transient by the JS
+    // pre-save AJAX call (pt_store_taxonomy action below).
+    $post_id = isset( $data['ID'] ) ? (int) $data['ID'] : 0;
+    if ( $post_id ) {
+        $stored = get_transient( 'pt_tax_' . $post_id );
+        if ( $stored ) {
+            delete_transient( 'pt_tax_' . $post_id );
+            if ( ! isset( $data['tax_input'] ) ) {
+                $data['tax_input'] = array();
+            }
+            if ( ! empty( $stored['theme'] ) ) {
+                $data['tax_input']['theme'] = $stored['theme'];
+            }
+            if ( ! empty( $stored['discipline'] ) ) {
+                $data['tax_input']['discipline'] = $stored['discipline'];
+            }
+        }
+    }
 
     return $data;
 
 }, 999 );
 
 
-//overwrite normal post link with the URL that was bookmarked
+// -----------------------------------------------------------------------
+// AJAX handler: stores selected taxonomy term IDs in a transient so the
+// press_this_save_post filter above can apply them during the REST save.
+// Called from JS before the press-this/v1/save request fires.
+// -----------------------------------------------------------------------
+add_action( 'wp_ajax_pt_store_taxonomy', function() {
+    check_ajax_referer( 'pt_store_taxonomy', 'nonce' );
 
-function update_custom_bookmark_permalink($post_link, $post) {
-    // Check if the post type is 'bookmark'
-    if ('update' === get_post_type($post)) {
-        // Retrieve the ACF field 'source_url'
-        $custom_url = get_field('source_url', $post->ID);
-
-        // If the custom field is not empty, replace the post link with the custom URL
-        if (!empty($custom_url)) {
-            return esc_url($custom_url);
-        }
+    $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+    if ( ! $post_id || ! current_user_can( 'edit_post', $post_id ) ) {
+        wp_send_json_error( 'unauthorized' );
     }
 
-    // If the conditions are not met, return the original post link
+    $theme_ids      = array_filter( array_map( 'absint', (array) ( $_POST['theme']      ?? array() ) ) );
+    $discipline_ids = array_filter( array_map( 'absint', (array) ( $_POST['discipline'] ?? array() ) ) );
+
+    set_transient(
+        'pt_tax_' . $post_id,
+        array( 'theme' => $theme_ids, 'discipline' => $discipline_ids ),
+        5 * MINUTE_IN_SECONDS
+    );
+
+    wp_send_json_success();
+} );
+
+
+// -----------------------------------------------------------------------
+// Overwrite the post permalink for 'update' posts with the bookmarked URL.
+// -----------------------------------------------------------------------
+function update_custom_bookmark_permalink( $post_link, $post ) {
+    if ( 'update' === get_post_type( $post ) ) {
+        $custom_url = get_field( 'source_url', $post->ID );
+        if ( ! empty( $custom_url ) ) {
+            return esc_url( $custom_url );
+        }
+    }
     return $post_link;
 }
-add_filter('post_type_link', 'update_custom_bookmark_permalink', 10, 2);
+add_filter( 'post_type_link', 'update_custom_bookmark_permalink', 10, 2 );
 
 
-// Display taxonomy controls in the Press This v2 (React/Gutenberg) sidebar.
-// The 'theme' and 'discipline' taxonomies are registered in inc/custom-data.php.
+// -----------------------------------------------------------------------
+// Press This sidebar: inject Themes and Disciplines panels.
+//
 // Strategy:
 //  1. MutationObserver waits for React to render .press-this-editor__sidebar-content,
 //     then appends two PanelBody-style sections (matching the Categories panel style)
 //     with hierarchical checkboxes inside .components-panel.
-//  2. window.fetch is monkey-patched: after a successful press-this/v1/save, a follow-up
-//     REST call to /wp/v2/updates/<postId> assigns the checked taxonomy terms.
+//  2. window.fetch is monkey-patched to intercept press-this/v1/save:
+//     a. BEFORE firing the save, an AJAX call stores the selected term IDs in a
+//        transient.  The press_this_save_post filter above reads that transient
+//        and includes the terms in the wp_update_post() call — all server-side,
+//        so window.close() cannot race against any network request.
+//     b. After the save response arrives, if redirect is set (= publish), we
+//        call window.close() and return a modified response with redirect:false
+//        so React doesn't also navigate the (already closing) window.
+// -----------------------------------------------------------------------
 add_action( 'admin_footer-press-this.php', function() {
-    // Pass full term data (id, name, parent) as JSON so JS can build the hierarchy.
+
     $theme_terms      = get_terms( array( 'taxonomy' => 'theme',      'hide_empty' => false ) );
     $discipline_terms = get_terms( array( 'taxonomy' => 'discipline', 'hide_empty' => false ) );
 
@@ -80,7 +123,6 @@ add_action( 'admin_footer-press-this.php', function() {
         $discipline_data[] = array( 'id' => (int) $t->term_id, 'name' => $t->name, 'parent' => (int) $t->parent );
     }
 
-    // SVG chevron used by WordPress PanelBody toggle arrow.
     $arrow_svg = '<svg class="components-panel__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M17.5 11.6L12 16l-5.5-4.4.9-1.2L12 14.1l4.5-3.6 1 1.1z"/></svg>';
     ?>
     <script type="text/javascript">
@@ -88,37 +130,32 @@ add_action( 'admin_footer-press-this.php', function() {
         var themeTerms      = <?php echo wp_json_encode( $theme_data ); ?>;
         var disciplineTerms = <?php echo wp_json_encode( $discipline_data ); ?>;
         var arrowSVG        = <?php echo wp_json_encode( $arrow_svg ); ?>;
+        var ajaxUrl         = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
+        var taxNonce        = <?php echo wp_json_encode( wp_create_nonce( 'pt_store_taxonomy' ) ); ?>;
 
         // -----------------------------------------------------------------------
-        // Build a hierarchical list of checkboxes matching the Categories panel.
-        // Returns an HTML string of <label class="press-this-editor__category">…
+        // Build hierarchical checkboxes matching the Categories panel style.
         // -----------------------------------------------------------------------
-        function buildCheckboxes(terms, containerId) {
-            // Sort top-level first, then children, preserving name order within each level.
+        function buildCheckboxes( terms ) {
             var html = '';
-
-            function renderChildren(parentId, depth) {
+            function renderChildren( parentId, depth ) {
                 terms
-                    .filter(function(t) { return t.parent === parentId; })
-                    .forEach(function(t) {
-                        var indent = depth * 16; // 16px per level, matching WP admin
+                    .filter( function( t ) { return t.parent === parentId; } )
+                    .forEach( function( t ) {
+                        var indent = depth * 16;
                         html +=
                             '<label class="press-this-editor__category" style="padding-left:' + indent + 'px;">' +
-                            '<input type="checkbox" data-container="' + containerId + '" value="' + t.id + '">' +
+                            '<input type="checkbox" value="' + t.id + '">' +
                             t.name +
                             '</label>';
-                        renderChildren(t.id, depth + 1);
-                    });
+                        renderChildren( t.id, depth + 1 );
+                    } );
             }
-            renderChildren(0, 0);
+            renderChildren( 0, 0 );
             return html;
         }
 
-        // -----------------------------------------------------------------------
-        // Build a full PanelBody-style section matching the existing sidebar panels.
-        // -----------------------------------------------------------------------
-        function buildPanel(panelId, title, terms) {
-            var checkboxes = buildCheckboxes(terms, panelId);
+        function buildPanel( panelId, title, terms ) {
             return (
                 '<div id="' + panelId + '" class="components-panel__body">' +
                     '<h2 class="components-panel__body-title">' +
@@ -127,103 +164,128 @@ add_action( 'admin_footer-press-this.php', function() {
                         '</button>' +
                     '</h2>' +
                     '<div class="press-this-editor__categories">' +
-                        checkboxes +
+                        buildCheckboxes( terms ) +
                     '</div>' +
                 '</div>'
             );
         }
 
-        // -----------------------------------------------------------------------
-        // Toggle open/close when the panel button is clicked.
-        // The content div is hidden via CSS when is-opened is absent.
-        // -----------------------------------------------------------------------
-        document.addEventListener('click', function(e) {
-            var btn = e.target.closest && e.target.closest('.components-panel__body-toggle');
-            if (!btn) return;
-            var panel = btn.closest('.components-panel__body');
-            if (!panel || (!panel.id || panel.id.indexOf('pt-') !== 0)) return;
-            var open = panel.classList.toggle('is-opened');
-            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-        });
+        // Toggle panel open/close (scoped to our injected panels via id prefix).
+        document.addEventListener( 'click', function( e ) {
+            var btn = e.target.closest && e.target.closest( '.components-panel__body-toggle' );
+            if ( ! btn ) return;
+            var panel = btn.closest( '.components-panel__body' );
+            if ( ! panel || ! panel.id || panel.id.indexOf( 'pt-' ) !== 0 ) return;
+            var open = panel.classList.toggle( 'is-opened' );
+            btn.setAttribute( 'aria-expanded', open ? 'true' : 'false' );
+        } );
 
         // -----------------------------------------------------------------------
         // MutationObserver: inject panels once React renders the sidebar.
-        // Target is .components-panel inside .press-this-editor__sidebar-content.
         // -----------------------------------------------------------------------
-        var appEl = document.getElementById('press-this-app');
-        if (!appEl) return;
+        var appEl = document.getElementById( 'press-this-app' );
+        if ( ! appEl ) return;
 
-        var observer = new MutationObserver(function() {
-            var sidebarContent = document.querySelector('.press-this-editor__sidebar-content');
-            if (!sidebarContent) return;
-            var panel = sidebarContent.querySelector('.components-panel');
-            if (!panel) return;
-            if (document.getElementById('pt-theme-panel')) return; // already injected
+        var observer = new MutationObserver( function() {
+            var sidebarContent = document.querySelector( '.press-this-editor__sidebar-content' );
+            if ( ! sidebarContent ) return;
+            var componentsPanel = sidebarContent.querySelector( '.components-panel' );
+            if ( ! componentsPanel ) return;
+            if ( document.getElementById( 'pt-theme-panel' ) ) return; // already injected
 
             observer.disconnect();
 
-            var wrapper = document.createElement('div');
+            var wrapper = document.createElement( 'div' );
             wrapper.innerHTML =
-                buildPanel('pt-theme-panel',      '<?php echo esc_js( __( 'Themes', 'understrap' ) ); ?>', themeTerms) +
-                buildPanel('pt-discipline-panel', '<?php echo esc_js( __( 'Disciplines', 'understrap' ) ); ?>', disciplineTerms);
+                buildPanel( 'pt-theme-panel',      '<?php echo esc_js( __( 'Themes',      'understrap' ) ); ?>', themeTerms ) +
+                buildPanel( 'pt-discipline-panel', '<?php echo esc_js( __( 'Disciplines', 'understrap' ) ); ?>', disciplineTerms );
 
-            while (wrapper.firstChild) {
-                panel.appendChild(wrapper.firstChild);
+            while ( wrapper.firstChild ) {
+                componentsPanel.appendChild( wrapper.firstChild );
             }
-        });
-        observer.observe(appEl, { childList: true, subtree: true });
+        } );
+        observer.observe( appEl, { childList: true, subtree: true } );
 
         // -----------------------------------------------------------------------
-        // Monkey-patch fetch: after a successful press-this/v1/save, assign the
-        // checked taxonomy terms via the standard WP REST API (/wp/v2/updates/).
+        // Helpers
+        // -----------------------------------------------------------------------
+        function getCheckedIds( panelId ) {
+            var boxes = document.querySelectorAll( '#' + panelId + ' input[type="checkbox"]:checked' );
+            return Array.prototype.map.call( boxes, function( b ) { return parseInt( b.value, 10 ); } );
+        }
+
+        // Store selected term IDs server-side via AJAX so the press_this_save_post
+        // PHP filter can apply them during the save. Returns a Promise.
+        function storeTaxonomyTerms( postId, themeIds, disciplineIds ) {
+            var formData = new FormData();
+            formData.append( 'action',  'pt_store_taxonomy' );
+            formData.append( 'nonce',   taxNonce );
+            formData.append( 'post_id', postId );
+            themeIds.forEach(      function( id ) { formData.append( 'theme[]',      id ); } );
+            disciplineIds.forEach( function( id ) { formData.append( 'discipline[]', id ); } );
+            return origFetch( ajaxUrl, { method: 'POST', body: formData } )
+                .catch( function() {} ); // never block the save on AJAX failure
+        }
+
+        // -----------------------------------------------------------------------
+        // Monkey-patch fetch to intercept press-this/v1/save.
+        //
+        // Flow for Publish:
+        //   1. Collect checked term IDs.
+        //   2. POST them to the AJAX handler (stored in a transient server-side).
+        //   3. Fire the original press-this/v1/save — the PHP filter reads the
+        //      transient and saves the terms inside wp_update_post(). Done.
+        //   4. Read the save response; if redirect is set, call window.close()
+        //      and return a redirect-free response so React doesn't also navigate.
+        //
+        // Flow for Save Draft: same steps 1-3, skip step 4 (no redirect).
         // -----------------------------------------------------------------------
         var origFetch = window.fetch;
-        window.fetch = function(url, options) {
-            var fetchPromise = origFetch.apply(this, arguments);
+        window.fetch = function( url, options ) {
 
-            if (typeof url === 'string' && url.indexOf('press-this/v1/save') !== -1) {
-                // Clone the response so the original .json() chain is not consumed.
-                fetchPromise.then(function(response) {
-                    if (!response.ok) return;
+            if ( typeof url === 'string' && url.indexOf( 'press-this/v1/save' ) !== -1 ) {
 
-                    var ptData  = window.pressThisData || {};
-                    var postId  = ptData.postId;
-                    var nonce   = ptData.restNonce;
-                    var restUrl = ptData.restUrl; // e.g. https://site/wp-json/press-this/v1/
-                    if (!postId || !nonce || !restUrl) return;
+                var themeIds      = getCheckedIds( 'pt-theme-panel' );
+                var disciplineIds = getCheckedIds( 'pt-discipline-panel' );
+                var ptData        = window.pressThisData || {};
+                var postId        = ptData.postId;
 
-                    function getCheckedIds(panelId) {
-                        var boxes = document.querySelectorAll(
-                            '#' + panelId + ' input[type="checkbox"]:checked'
+                // Store terms server-side first, then fire the press-this save.
+                var preSave = ( ( themeIds.length || disciplineIds.length ) && postId )
+                    ? storeTaxonomyTerms( postId, themeIds, disciplineIds )
+                    : Promise.resolve();
+
+                return preSave
+                    .then( function() {
+                        return origFetch( url, options );
+                    } )
+                    .then( function( response ) {
+                        if ( ! response.ok ) return response;
+
+                        return response.clone().json().then(
+                            function( data ) {
+                                if ( data && data.redirect ) {
+                                    // Published — close the popup.
+                                    // Return redirect-free response so React doesn't navigate.
+                                    window.close();
+                                    return new Response(
+                                        JSON.stringify( Object.assign( {}, data, { redirect: false } ) ),
+                                        { status: 200, headers: { 'Content-Type': 'application/json' } }
+                                    );
+                                }
+                                return response; // draft save — pass through unchanged
+                            },
+                            function() { return response; } // JSON parse error — pass through
                         );
-                        return Array.prototype.map.call(boxes, function(b) {
-                            return parseInt(b.value, 10);
-                        });
-                    }
-
-                    var themeIds      = getCheckedIds('pt-theme-panel');
-                    var disciplineIds = getCheckedIds('pt-discipline-panel');
-                    if (!themeIds.length && !disciplineIds.length) return;
-
-                    var wpRoot  = restUrl.replace(/press-this\/v1\/?$/, '');
-                    var taxData = {};
-                    if (themeIds.length)      taxData['theme']      = themeIds;
-                    if (disciplineIds.length) taxData['discipline'] = disciplineIds;
-
-                    origFetch(wpRoot + 'wp/v2/updates/' + postId, {
-                        method:  'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
-                        body:    JSON.stringify(taxData)
-                    });
-                });
+                    } );
             }
 
-            return fetchPromise;
+            return origFetch.apply( this, arguments );
         };
     })();
     </script>
     <style>
-    /* Hide panel content until is-opened; the arrow rotates when open. */
+    /* Hide panel content until is-opened; rotate arrow when open. */
     #pt-theme-panel .press-this-editor__categories,
     #pt-discipline-panel .press-this-editor__categories {
         display: none;

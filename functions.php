@@ -28,6 +28,7 @@ $understrap_includes = array(
 	'/block-editor.php',                    // Load Block Editor functions.
 	'/custom-data.php',						//Load custom taxonomies and/or post types
 	'/applications.php',					//Load custom functions for applications	
+	'/bookmark-related.php',				//Load custom functions for bookmarklet related actions
 	'/deprecated.php',                      // Load deprecated functions.
 );
 
@@ -246,4 +247,16 @@ function dlinq_updates_json_load_point( $paths ) {
     // return
     return $paths;
     
+}
+
+//LOGGER -- like frogger but more useful
+
+if ( ! function_exists('write_log')) {
+   function write_log ( $log )  {
+      if ( is_array( $log ) || is_object( $log ) ) {
+         error_log( print_r( $log, true ) );
+      } else {
+         error_log( $log );
+      }
+   }
 }

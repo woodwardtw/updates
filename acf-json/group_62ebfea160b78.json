@@ -3,10 +3,11 @@
     "title": "Update Basics",
     "fields": [
         {
-            "key": "field_62f2699e4569f",
-            "label": "Update Type",
-            "name": "update_type",
-            "type": "taxonomy",
+            "key": "field_69b2b2065b7da",
+            "label": "Source URL",
+            "name": "source_url",
+            "aria-label": "",
+            "type": "url",
             "instructions": "",
             "required": 0,
             "conditional_logic": 0,
@@ -15,36 +16,113 @@
                 "class": "",
                 "id": ""
             },
-            "taxonomy": "update-types",
-            "field_type": "checkbox",
+            "default_value": "",
+            "allow_in_bindings": 0,
+            "placeholder": ""
+        },
+        {
+            "key": "field_69b2af7ba611e",
+            "label": "Theme",
+            "name": "theme",
+            "aria-label": "",
+            "type": "taxonomy",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "25",
+                "class": "",
+                "id": ""
+            },
+            "taxonomy": "theme",
             "add_term": 1,
             "save_terms": 1,
             "load_terms": 1,
             "return_format": "object",
+            "field_type": "checkbox",
+            "allow_in_bindings": 1,
+            "bidirectional": 0,
             "multiple": 0,
-            "allow_null": 0
+            "allow_null": 0,
+            "bidirectional_target": []
+        },
+        {
+            "key": "field_69b2afa9a611f",
+            "label": "Discipline",
+            "name": "discipline",
+            "aria-label": "",
+            "type": "taxonomy",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "25",
+                "class": "",
+                "id": ""
+            },
+            "taxonomy": "discipline",
+            "add_term": 1,
+            "save_terms": 1,
+            "load_terms": 1,
+            "return_format": "object",
+            "field_type": "checkbox",
+            "allow_in_bindings": 1,
+            "bidirectional": 0,
+            "multiple": 0,
+            "allow_null": 0,
+            "bidirectional_target": []
+        },
+        {
+            "key": "field_62f2699e4569f",
+            "label": "Update Type",
+            "name": "update_type",
+            "aria-label": "",
+            "type": "taxonomy",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "25",
+                "class": "",
+                "id": ""
+            },
+            "taxonomy": "update-types",
+            "add_term": 1,
+            "save_terms": 1,
+            "load_terms": 1,
+            "return_format": "object",
+            "field_type": "checkbox",
+            "allow_in_bindings": 1,
+            "bidirectional": 0,
+            "multiple": 0,
+            "allow_null": 0,
+            "bidirectional_target": []
         },
         {
             "key": "field_62f26b37bcd9e",
             "label": "Software",
             "name": "software",
+            "aria-label": "",
             "type": "taxonomy",
             "instructions": "",
             "required": 0,
             "conditional_logic": 0,
             "wrapper": {
-                "width": "",
+                "width": "25",
                 "class": "",
                 "id": ""
             },
             "taxonomy": "software",
-            "field_type": "checkbox",
             "add_term": 1,
             "save_terms": 1,
             "load_terms": 1,
             "return_format": "object",
+            "field_type": "checkbox",
+            "allow_in_bindings": 1,
+            "bidirectional": 0,
             "multiple": 0,
-            "allow_null": 0
+            "allow_null": 0,
+            "bidirectional_target": []
         }
     ],
     "location": [
@@ -57,7 +135,7 @@
         ]
     ],
     "menu_order": 0,
-    "position": "normal",
+    "position": "acf_after_title",
     "style": "default",
     "label_placement": "top",
     "instruction_placement": "label",
@@ -65,5 +143,6 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1660152277
+    "display_title": "",
+    "modified": 1773320090
 }

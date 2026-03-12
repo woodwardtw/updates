@@ -1,6 +1,6 @@
 /*!
   * Understrap v1.1.0 (https://understrap.com)
-  * Copyright 2013-2025 The UnderStrap Authors (https://github.com/understrap/understrap/graphs/contributors)
+  * Copyright 2013-2026 The UnderStrap Authors (https://github.com/understrap/understrap/graphs/contributors)
   * Licensed under GPL (http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
   */
 (function (global, factory) {
@@ -9271,25 +9271,20 @@
 	 */
 	(function () {
 	  var isWebkit = navigator.userAgent.toLowerCase().indexOf('webkit') > -1,
-	      isOpera = navigator.userAgent.toLowerCase().indexOf('opera') > -1,
-	      isIe = navigator.userAgent.toLowerCase().indexOf('msie') > -1;
-
+	    isOpera = navigator.userAgent.toLowerCase().indexOf('opera') > -1,
+	    isIe = navigator.userAgent.toLowerCase().indexOf('msie') > -1;
 	  if ((isWebkit || isOpera || isIe) && document.getElementById && window.addEventListener) {
 	    window.addEventListener('hashchange', function () {
 	      var id = location.hash.substring(1),
-	          element;
-
+	        element;
 	      if (!/^[A-z0-9_-]+$/.test(id)) {
 	        return;
 	      }
-
 	      element = document.getElementById(id);
-
 	      if (element) {
 	        if (!/^(?:a|select|input|button|textarea)$/i.test(element.tagName)) {
 	          element.tabIndex = -1;
 	        }
-
 	        element.focus();
 	      }
 	    }, false);

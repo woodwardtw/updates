@@ -6,6 +6,103 @@
  */
 
 // -----------------------------------------------------------------------
+// media_sideload_image() lives in admin-only includes that WordPress does
+// not load during REST API requests.  The Press This plugin calls it without
+// requiring those files, causing a fatal.  Load them here when the REST API
+// initialises so they're available by the time the callback runs.
+// -----------------------------------------------------------------------
+add_action( 'rest_api_init', function() {
+    require_once ABSPATH . 'wp-admin/includes/media.php';
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+    require_once ABSPATH . 'wp-admin/includes/image.php';
+} );
+
+// -----------------------------------------------------------------------
+// Strip well-known tracking/analytics parameters from a URL.
+//
+// Handles two common encoding issues:
+//  1. HTML-entity separators: URLs extracted from HTML attributes often have
+//     &amp; instead of & between parameters.  html_entity_decode() fixes this
+//     before parse_str() sees the query string.
+//  2. amp; key prefix: when &amp; wasn't decoded before parse_str(), each key
+//     ends up with a literal "amp;" prefix (e.g. "amp;utm_medium").  After
+//     html_entity_decode() this is also resolved, but we strip any residual
+//     "amp;" prefix as a fallback.
+//
+// All utm_* parameters are removed by pattern; other tracker IDs are listed
+// explicitly.  Filterable via 'update_tracking_params' for the explicit list.
+// -----------------------------------------------------------------------
+function update_strip_tracking_params( $url ) {
+
+    // Explicit non-UTM tracking params to remove.
+    $explicit_params = apply_filters( 'update_tracking_params', array(
+        // Google Ads
+        'gclid', 'gclsrc', 'dclid', 'gbraid', 'wbraid',
+        'gad_source', 'gad_campaignid',
+        // Facebook / Meta
+        'fbclid',
+        // Microsoft / Bing Ads
+        'msclkid',
+        // Mailchimp
+        'mc_cid', 'mc_eid',
+        // Twitter / X
+        'twclid',
+        // Instagram
+        'igshid',
+        // HubSpot
+        '_hsenc', '_hsmi',
+        // Marketo
+        'mkt_tok',
+    ) );
+
+    $parsed = wp_parse_url( $url );
+    if ( empty( $parsed['query'] ) ) {
+        return $url;
+    }
+
+    // Decode HTML entities so &amp; separators become plain & before parse_str.
+    $query = html_entity_decode( $parsed['query'], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+    parse_str( $query, $raw_params );
+
+    $clean_params = array();
+    foreach ( $raw_params as $key => $value ) {
+        // Strip residual "amp;" prefix (e.g. "amp;utm_medium" → "utm_medium").
+        // This occurs when %3B-encoded semicolons from &amp; survive decoding.
+        $key = preg_replace( '/^amp;/', '', $key );
+
+        // Remove all utm_* parameters (covers utm_source, utm_medium,
+        // utm_campaign, utm_ads_campaign_id, and any future variants).
+        if ( preg_match( '/^utm_/i', $key ) ) {
+            continue;
+        }
+
+        // Remove explicitly listed tracker IDs.
+        if ( in_array( $key, $explicit_params, true ) ) {
+            continue;
+        }
+
+        $clean_params[ $key ] = $value;
+    }
+
+    $clean_query = http_build_query( $clean_params );
+
+    $clean_url = $parsed['scheme'] . '://' . $parsed['host'];
+    if ( ! empty( $parsed['port'] ) ) {
+        $clean_url .= ':' . $parsed['port'];
+    }
+    $clean_url .= ( $parsed['path'] ?? '' );
+    if ( $clean_query !== '' ) {
+        $clean_url .= '?' . $clean_query;
+    }
+    if ( ! empty( $parsed['fragment'] ) ) {
+        $clean_url .= '#' . $parsed['fragment'];
+    }
+
+    return $clean_url;
+}
+
+// -----------------------------------------------------------------------
 // Change post type to 'update' on save, extract source URL into ACF field,
 // and apply any taxonomy terms pre-stored by the JS before the save fired.
 // -----------------------------------------------------------------------
@@ -14,7 +111,7 @@ add_filter( 'press_this_save_post', function( $data ) {
     $pattern = '/Source: <em><a href="([^"]+)"/';//regex to get source URL
 
     if ( preg_match( $pattern, $data['post_content'], $matches ) ) {
-        $url = $matches[1];
+        $url = update_strip_tracking_params( $matches[1] );
         update_field( 'source_url', $url, $data['ID'] );
     }
 

@@ -61,102 +61,159 @@ add_filter('post_type_link', 'update_custom_bookmark_permalink', 10, 2);
 // Display taxonomy controls in the Press This v2 (React/Gutenberg) sidebar.
 // The 'theme' and 'discipline' taxonomies are registered in inc/custom-data.php.
 // Strategy:
-//  1. MutationObserver waits for the React sidebar (.press-this-editor__sidebar-content) to render.
-//  2. We inject <select> elements for Theme and Discipline into the sidebar.
-//  3. We monkey-patch window.fetch to intercept the press-this/v1/save REST call and,
-//     after a successful save, make a follow-up REST call to /wp/v2/updates/<postId>
-//     to assign the selected taxonomy terms (both CPT and taxonomies have show_in_rest=true).
+//  1. MutationObserver waits for React to render .press-this-editor__sidebar-content,
+//     then appends two PanelBody-style sections (matching the Categories panel style)
+//     with hierarchical checkboxes inside .components-panel.
+//  2. window.fetch is monkey-patched: after a successful press-this/v1/save, a follow-up
+//     REST call to /wp/v2/updates/<postId> assigns the checked taxonomy terms.
 add_action( 'admin_footer-press-this.php', function() {
+    // Pass full term data (id, name, parent) as JSON so JS can build the hierarchy.
     $theme_terms      = get_terms( array( 'taxonomy' => 'theme',      'hide_empty' => false ) );
     $discipline_terms = get_terms( array( 'taxonomy' => 'discipline', 'hide_empty' => false ) );
 
-    // Build option HTML strings in PHP to avoid inline JS string-building loops.
-    $theme_options = '';
-    foreach ( (array) $theme_terms as $term ) {
-        $theme_options .= '<option value="' . esc_attr( $term->term_id ) . '">' . esc_html( $term->name ) . '</option>';
+    $theme_data = array();
+    foreach ( (array) $theme_terms as $t ) {
+        $theme_data[] = array( 'id' => (int) $t->term_id, 'name' => $t->name, 'parent' => (int) $t->parent );
     }
-    $discipline_options = '';
-    foreach ( (array) $discipline_terms as $term ) {
-        $discipline_options .= '<option value="' . esc_attr( $term->term_id ) . '">' . esc_html( $term->name ) . '</option>';
+    $discipline_data = array();
+    foreach ( (array) $discipline_terms as $t ) {
+        $discipline_data[] = array( 'id' => (int) $t->term_id, 'name' => $t->name, 'parent' => (int) $t->parent );
     }
+
+    // SVG chevron used by WordPress PanelBody toggle arrow.
+    $arrow_svg = '<svg class="components-panel__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M17.5 11.6L12 16l-5.5-4.4.9-1.2L12 14.1l4.5-3.6 1 1.1z"/></svg>';
     ?>
     <script type="text/javascript">
     (function() {
-        // -----------------------------------------------------------------------
-        // 1. Build the HTML for the taxonomy selects (options injected from PHP).
-        // -----------------------------------------------------------------------
-        var themeOptionsHTML      = <?php echo wp_json_encode( $theme_options ); ?>;
-        var disciplineOptionsHTML = <?php echo wp_json_encode( $discipline_options ); ?>;
-
-        var panelHTML =
-            '<div id="pt-custom-taxonomies" style="padding:0 16px 16px;border-top:1px solid #ddd;margin-top:8px;">' +
-                '<p style="margin:12px 0 4px;font-weight:600;font-size:13px;"><?php echo esc_js( __( 'Theme', 'understrap' ) ); ?></p>' +
-                '<select id="pt-theme-select" style="width:100%;margin-bottom:12px;">' +
-                    '<option value="">&mdash; <?php echo esc_js( __( 'Select', 'understrap' ) ); ?> &mdash;</option>' +
-                    themeOptionsHTML +
-                '</select>' +
-                '<p style="margin:0 0 4px;font-weight:600;font-size:13px;"><?php echo esc_js( __( 'Discipline', 'understrap' ) ); ?></p>' +
-                '<select id="pt-discipline-select" style="width:100%;">' +
-                    '<option value="">&mdash; <?php echo esc_js( __( 'Select', 'understrap' ) ); ?> &mdash;</option>' +
-                    disciplineOptionsHTML +
-                '</select>' +
-            '</div>';
+        var themeTerms      = <?php echo wp_json_encode( $theme_data ); ?>;
+        var disciplineTerms = <?php echo wp_json_encode( $discipline_data ); ?>;
+        var arrowSVG        = <?php echo wp_json_encode( $arrow_svg ); ?>;
 
         // -----------------------------------------------------------------------
-        // 2. MutationObserver: inject selects once React renders the sidebar.
+        // Build a hierarchical list of checkboxes matching the Categories panel.
+        // Returns an HTML string of <label class="press-this-editor__category">…
+        // -----------------------------------------------------------------------
+        function buildCheckboxes(terms, containerId) {
+            // Sort top-level first, then children, preserving name order within each level.
+            var html = '';
+
+            function renderChildren(parentId, depth) {
+                terms
+                    .filter(function(t) { return t.parent === parentId; })
+                    .forEach(function(t) {
+                        var indent = depth * 16; // 16px per level, matching WP admin
+                        html +=
+                            '<label class="press-this-editor__category" style="padding-left:' + indent + 'px;">' +
+                            '<input type="checkbox" data-container="' + containerId + '" value="' + t.id + '">' +
+                            t.name +
+                            '</label>';
+                        renderChildren(t.id, depth + 1);
+                    });
+            }
+            renderChildren(0, 0);
+            return html;
+        }
+
+        // -----------------------------------------------------------------------
+        // Build a full PanelBody-style section matching the existing sidebar panels.
+        // -----------------------------------------------------------------------
+        function buildPanel(panelId, title, terms) {
+            var checkboxes = buildCheckboxes(terms, panelId);
+            return (
+                '<div id="' + panelId + '" class="components-panel__body">' +
+                    '<h2 class="components-panel__body-title">' +
+                        '<button type="button" class="components-panel__body-toggle components-button" aria-expanded="false">' +
+                            title + arrowSVG +
+                        '</button>' +
+                    '</h2>' +
+                    '<div class="press-this-editor__categories">' +
+                        checkboxes +
+                    '</div>' +
+                '</div>'
+            );
+        }
+
+        // -----------------------------------------------------------------------
+        // Toggle open/close when the panel button is clicked.
+        // The content div is hidden via CSS when is-opened is absent.
+        // -----------------------------------------------------------------------
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest && e.target.closest('.components-panel__body-toggle');
+            if (!btn) return;
+            var panel = btn.closest('.components-panel__body');
+            if (!panel || (!panel.id || panel.id.indexOf('pt-') !== 0)) return;
+            var open = panel.classList.toggle('is-opened');
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+
+        // -----------------------------------------------------------------------
+        // MutationObserver: inject panels once React renders the sidebar.
+        // Target is .components-panel inside .press-this-editor__sidebar-content.
         // -----------------------------------------------------------------------
         var appEl = document.getElementById('press-this-app');
         if (!appEl) return;
 
         var observer = new MutationObserver(function() {
-            var sidebar = document.querySelector('.press-this-editor__sidebar-content');
-            if (sidebar && !document.getElementById('pt-custom-taxonomies')) {
-                var node = document.createElement('div');
-                node.innerHTML = panelHTML;
-                sidebar.appendChild(node.firstElementChild);
+            var sidebarContent = document.querySelector('.press-this-editor__sidebar-content');
+            if (!sidebarContent) return;
+            var panel = sidebarContent.querySelector('.components-panel');
+            if (!panel) return;
+            if (document.getElementById('pt-theme-panel')) return; // already injected
+
+            observer.disconnect();
+
+            var wrapper = document.createElement('div');
+            wrapper.innerHTML =
+                buildPanel('pt-theme-panel',      '<?php echo esc_js( __( 'Themes', 'understrap' ) ); ?>', themeTerms) +
+                buildPanel('pt-discipline-panel', '<?php echo esc_js( __( 'Disciplines', 'understrap' ) ); ?>', disciplineTerms);
+
+            while (wrapper.firstChild) {
+                panel.appendChild(wrapper.firstChild);
             }
         });
         observer.observe(appEl, { childList: true, subtree: true });
 
         // -----------------------------------------------------------------------
-        // 3. Monkey-patch fetch: after a successful press-this/v1/save, assign
-        //    the selected taxonomy terms via the standard WP REST API.
+        // Monkey-patch fetch: after a successful press-this/v1/save, assign the
+        // checked taxonomy terms via the standard WP REST API (/wp/v2/updates/).
         // -----------------------------------------------------------------------
         var origFetch = window.fetch;
         window.fetch = function(url, options) {
             var fetchPromise = origFetch.apply(this, arguments);
 
             if (typeof url === 'string' && url.indexOf('press-this/v1/save') !== -1) {
+                // Clone the response so the original .json() chain is not consumed.
                 fetchPromise.then(function(response) {
                     if (!response.ok) return;
 
-                    var ptData    = window.pressThisData || {};
-                    var postId    = ptData.postId;
-                    var nonce     = ptData.restNonce;
-                    var restUrl   = ptData.restUrl; // e.g. https://site/wp-json/press-this/v1/
-
+                    var ptData  = window.pressThisData || {};
+                    var postId  = ptData.postId;
+                    var nonce   = ptData.restNonce;
+                    var restUrl = ptData.restUrl; // e.g. https://site/wp-json/press-this/v1/
                     if (!postId || !nonce || !restUrl) return;
 
-                    var themeEl      = document.getElementById('pt-theme-select');
-                    var disciplineEl = document.getElementById('pt-discipline-select');
-                    var themeId      = themeEl      ? parseInt(themeEl.value,      10) : 0;
-                    var disciplineId = disciplineEl ? parseInt(disciplineEl.value, 10) : 0;
+                    function getCheckedIds(panelId) {
+                        var boxes = document.querySelectorAll(
+                            '#' + panelId + ' input[type="checkbox"]:checked'
+                        );
+                        return Array.prototype.map.call(boxes, function(b) {
+                            return parseInt(b.value, 10);
+                        });
+                    }
 
-                    if (!themeId && !disciplineId) return;
+                    var themeIds      = getCheckedIds('pt-theme-panel');
+                    var disciplineIds = getCheckedIds('pt-discipline-panel');
+                    if (!themeIds.length && !disciplineIds.length) return;
 
-                    // Derive WP REST root from the press-this REST URL.
-                    var wpRoot = restUrl.replace(/press-this\/v1\/?$/, '');
+                    var wpRoot  = restUrl.replace(/press-this\/v1\/?$/, '');
                     var taxData = {};
-                    if (themeId)      taxData['theme']      = [themeId];
-                    if (disciplineId) taxData['discipline'] = [disciplineId];
+                    if (themeIds.length)      taxData['theme']      = themeIds;
+                    if (disciplineIds.length) taxData['discipline'] = disciplineIds;
 
                     origFetch(wpRoot + 'wp/v2/updates/' + postId, {
                         method:  'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-WP-Nonce':   nonce
-                        },
-                        body: JSON.stringify(taxData)
+                        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce },
+                        body:    JSON.stringify(taxData)
                     });
                 });
             }
@@ -165,5 +222,20 @@ add_action( 'admin_footer-press-this.php', function() {
         };
     })();
     </script>
+    <style>
+    /* Hide panel content until is-opened; the arrow rotates when open. */
+    #pt-theme-panel .press-this-editor__categories,
+    #pt-discipline-panel .press-this-editor__categories {
+        display: none;
+    }
+    #pt-theme-panel.is-opened .press-this-editor__categories,
+    #pt-discipline-panel.is-opened .press-this-editor__categories {
+        display: block;
+    }
+    #pt-theme-panel.is-opened .components-panel__arrow,
+    #pt-discipline-panel.is-opened .components-panel__arrow {
+        transform: translateY(-50%) rotate(180deg);
+    }
+    </style>
     <?php
 } );

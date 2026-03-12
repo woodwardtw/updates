@@ -139,18 +139,18 @@ add_filter( 'press_this_save_post', function( $data ) {
         $stored = get_transient( 'pt_tax_' . $post_id );
         if ( $stored ) {
             delete_transient( 'pt_tax_' . $post_id );
-            if ( ! isset( $data['tax_input'] ) ) {
-                $data['tax_input'] = array();
-            }
-            if ( ! empty( $stored['theme'] ) ) {
-                $data['tax_input']['theme'] = $stored['theme'];
-            }
-            if ( ! empty( $stored['discipline'] ) ) {
-                $data['tax_input']['discipline'] = $stored['discipline'];
-            }
-            if ( ! empty( $stored['software'] ) ) {
-                $data['tax_input']['software'] = $stored['software'];
-            }
+            add_action( 'save_post', function( $saved_id ) use ( $post_id, $stored ) {
+                if ( $saved_id !== $post_id ) return;
+                if ( ! empty( $stored['theme'] ) ) {
+                    wp_set_object_terms( $saved_id, $stored['theme'], 'theme' );
+                }
+                if ( ! empty( $stored['discipline'] ) ) {
+                    wp_set_object_terms( $saved_id, $stored['discipline'], 'discipline' );
+                }
+                if ( ! empty( $stored['software'] ) ) {
+                    wp_set_object_terms( $saved_id, $stored['software'], 'software' );
+                }
+            } );
         }
     }
 

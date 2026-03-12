@@ -135,8 +135,10 @@ add_filter( 'press_this_save_post', function( $data ) {
     // Apply taxonomy terms that were stored in a transient by the JS
     // pre-save AJAX call (pt_store_taxonomy action below).
     $post_id = isset( $data['ID'] ) ? (int) $data['ID'] : 0;
+    error_log( 'pt_debug: filter fired, post_id=' . $post_id );
     if ( $post_id ) {
         $stored = get_transient( 'pt_tax_' . $post_id );
+        error_log( 'pt_debug: transient=' . print_r( $stored, true ) );
         if ( $stored ) {
             delete_transient( 'pt_tax_' . $post_id );
             add_action( 'save_post', function( $saved_id ) use ( $post_id, $stored ) {

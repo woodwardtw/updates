@@ -51,6 +51,8 @@ defined( 'ABSPATH' ) || exit;
             $url = get_permalink($post_id);
             $title = get_the_title($post_id);
             $theme = get_the_terms( $post_id, 'theme' );
+            $theme_count = is_array($theme) ? count($theme) : 0;
+            $label = ($theme_count === 1) ? 'Theme' : 'Themes';
             $theme_list = '';
             foreach ( $theme as $term ) {
                 //https://wpmu.local/updates/?post_type=update&themes=access-and-equity
@@ -60,9 +62,9 @@ defined( 'ABSPATH' ) || exit;
            // $excerpt =  wp_trim_words( get_the_content( null, false, $post_id ), 125, '&hellip;' );
            $excerpt = get_the_content( null, false, $post_id );
           echo "<div class='update-item'>
-                <h2><a href='{$url}'>{$title}</a></h2>
+                <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
                 <div class='update-excerpt'>{$excerpt}</div>
-                <div class='update-tax'>{$theme_list}</div>
+                <div class='update-tax'>{$label}: {$theme_list}</div>
             </div>";
         }
         wp_reset_postdata();

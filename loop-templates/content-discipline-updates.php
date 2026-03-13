@@ -46,13 +46,23 @@ defined( 'ABSPATH' ) || exit;
         }
 
         foreach ( $discipline_query->posts as $post ) {
+            $site_url = get_site_url();
             $post_id = $post->ID;
             $url = get_permalink($post_id);
             $title = get_the_title($post_id);
-            $excerpt =  wp_trim_words( get_the_content( null, false, $post_id ), 55, '&hellip;' );
+            $theme = get_the_terms( $post_id, 'theme' );
+            $theme_list = '';
+            foreach ( $theme as $term ) {
+                //https://wpmu.local/updates/?post_type=update&themes=access-and-equity
+                $theme_list .= "<a href='" . $site_url . "/?post_type=update&themes=" . $term->slug . "'>" . $term->name . "</a>, ";
+            }
+            $theme_list = rtrim( $theme_list, ', ' );
+           // $excerpt =  wp_trim_words( get_the_content( null, false, $post_id ), 125, '&hellip;' );
+           $excerpt = get_the_content( null, false, $post_id );
           echo "<div class='update-item'>
                 <h2><a href='{$url}'>{$title}</a></h2>
                 <div class='update-excerpt'>{$excerpt}</div>
+                <div class='update-tax'>{$theme_list}</div>
             </div>";
         }
         wp_reset_postdata();

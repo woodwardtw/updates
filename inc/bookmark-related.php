@@ -135,10 +135,8 @@ add_filter( 'press_this_save_post', function( $data ) {
     // Apply taxonomy terms that were stored in post meta by the JS
     // pre-save AJAX call (pt_store_taxonomy action below).
     $post_id = isset( $data['ID'] ) ? (int) $data['ID'] : 0;
-    error_log( 'pt_debug: filter fired, post_id=' . $post_id );
     if ( $post_id ) {
         $stored = get_post_meta( $post_id, '_pt_pending_tax', true );
-        error_log( 'pt_debug: stored=' . print_r( $stored, true ) );
         if ( $stored ) {
             delete_post_meta( $post_id, '_pt_pending_tax' );
             add_action( 'save_post', function( $saved_id ) use ( $post_id, $stored ) {
@@ -385,7 +383,7 @@ add_action( 'admin_footer-press-this.php', function() {
                                 if ( data && data.redirect ) {
                                     // Published — close the popup.
                                     // Return redirect-free response so React doesn't navigate.
-                                    //window.close();
+                                    window.close();
                                     return new Response(
                                         JSON.stringify( Object.assign( {}, data, { redirect: false } ) ),
                                         { status: 200, headers: { 'Content-Type': 'application/json' } }

@@ -132,15 +132,15 @@ add_filter( 'press_this_save_post', function( $data ) {
         $data['post_type'] = $new_cpt;
     }
 
-    // Apply taxonomy terms that were stored in a transient by the JS
+    // Apply taxonomy terms that were stored in post meta by the JS
     // pre-save AJAX call (pt_store_taxonomy action below).
     $post_id = isset( $data['ID'] ) ? (int) $data['ID'] : 0;
     error_log( 'pt_debug: filter fired, post_id=' . $post_id );
     if ( $post_id ) {
-        $stored = get_transient( 'pt_tax_' . $post_id );
-        error_log( 'pt_debug: transient=' . print_r( $stored, true ) );
+        $stored = get_post_meta( $post_id, '_pt_pending_tax', true );
+        error_log( 'pt_debug: stored=' . print_r( $stored, true ) );
         if ( $stored ) {
-            delete_transient( 'pt_tax_' . $post_id );
+            delete_post_meta( $post_id, '_pt_pending_tax' );
             add_action( 'save_post', function( $saved_id ) use ( $post_id, $stored ) {
                 if ( $saved_id !== $post_id ) return;
                 if ( ! empty( $stored['theme'] ) ) {
@@ -162,7 +162,7 @@ add_filter( 'press_this_save_post', function( $data ) {
 
 
 // -----------------------------------------------------------------------
-// AJAX handler: stores selected taxonomy term IDs in a transient so the
+// AJAX handler: stores selected taxonomy term IDs in post meta so the
 // press_this_save_post filter above can apply them during the REST save.
 // Called from JS before the press-this/v1/save request fires.
 // -----------------------------------------------------------------------
@@ -177,11 +177,11 @@ add_action( 'wp_ajax_pt_store_taxonomy', function() {
     $theme_ids      = array_filter( array_map( 'absint', (array) ( $_POST['theme']      ?? array() ) ) );
     $discipline_ids = array_filter( array_map( 'absint', (array) ( $_POST['discipline'] ?? array() ) ) );
     $software_ids   = array_filter( array_map( 'absint', (array) ( $_POST['software']   ?? array() ) ) );
-    set_transient(
-        'pt_tax_' . $post_id,
-        array( 'theme' => $theme_ids, 'discipline' => $discipline_ids, 'software' => $software_ids ),
-        5 * MINUTE_IN_SECONDS
-    );
+    update_post_meta( $post_id, '_pt_pending_tax', array(
+        'theme'      => $theme_ids,
+        'discipline' => $discipline_ids,
+        'software'   => $software_ids,
+    ) );
 
     wp_send_json_success();
 } );

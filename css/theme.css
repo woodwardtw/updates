@@ -16227,7 +16227,21 @@ blockquote::before {
   top: -30px;
 }
 
+h2.update-title, .update-title.h2 {
+  font-size: 1.5rem;
+}
+
+.update-item {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 3px solid #efefef;
+}
+
 .update-excerpt {
+  margin-left: 20px;
+}
+
+.update-tax {
   margin-left: 20px;
 }
 

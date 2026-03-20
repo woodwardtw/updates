@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
 
 	<?php echo get_the_post_thumbnail( $post->ID, 'large' ); ?>
 
-	<div class="entry-content">
+	<div class="entry-content discipline-updates">
 
 		<?php
         $current_date = current_time( 'M Y' );
@@ -106,7 +106,7 @@ defined( 'ABSPATH' ) || exit;
         ) );
 
         if ( $general_query->have_posts() ) {
-            echo '<h2>General Updates</h2>';
+            echo '<div class="general-updates"><h1>General Updates</h1>';
          }
         foreach ( $general_query->posts as $post ) {
             $site_url = get_site_url();
@@ -137,7 +137,7 @@ defined( 'ABSPATH' ) || exit;
                 </div>";    
         }  
         wp_reset_postdata();
-
+        echo '</div>';
 		//the_content();
 		understrap_link_pages();
 		?>

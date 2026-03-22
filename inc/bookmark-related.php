@@ -120,6 +120,12 @@ add_filter( 'press_this_save_post', function( $data ) {
     if ( preg_match( $pattern, $data['post_content'], $matches ) ) {
         $url = update_strip_tracking_params( $matches[1] );
         update_field( 'source_url', $url, $data['ID'] );
+        // Remove the "Source: ..." line Press This appends to the body.
+        $data['post_content'] = preg_replace(
+            '/<p[^>]*>\s*Source:.*?<\/p>\s*/is',
+            '',
+            $data['post_content']
+        );
     }
 
     $new_cpt     = 'update';

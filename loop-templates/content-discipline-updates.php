@@ -56,7 +56,7 @@ defined( 'ABSPATH' ) || exit;
                 ),
             ) );
         }
-
+        echo '<ol class="discipline-updates-list">';
         foreach ( $discipline_query->posts as $post ) {
             $site_url = get_site_url();
             $post_id = $post->ID;
@@ -80,12 +80,13 @@ defined( 'ABSPATH' ) || exit;
             $theme_list = rtrim( $theme_list, ', ' );
            // $excerpt =  wp_trim_words( get_the_content( null, false, $post_id ), 125, '&hellip;' );
            $excerpt = get_the_content( null, false, $post_id );
-          echo "<div class='update-item'>
+          echo "<li><div class='update-item'>
                 <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
                 <div class='update-excerpt'>{$excerpt}</div>
                 <div class='update-tax'>{$label} {$theme_list}</div>
-            </div>";
+            </div></li>";
         }
+        echo '</ol>';
         wp_reset_postdata();
         //GENERAL QUERY - for stuff not already selected - nothing should show if no discipline is selected
         $general_query = new WP_Query( array(

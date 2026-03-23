@@ -16245,6 +16245,14 @@ h2.update-title, .update-title.h2 {
   margin-left: 20px;
 }
 
+.discipline-link {
+  padding-right: 10px;
+}
+
+.chooser {
+  margin: 30px 0;
+}
+
 @media (max-width: 768px) {
   #right-sidebar {
     padding-left: 10px;

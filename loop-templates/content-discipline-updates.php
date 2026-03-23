@@ -22,7 +22,19 @@ defined( 'ABSPATH' ) || exit;
 	<?php echo get_the_post_thumbnail( $post->ID, 'large' ); ?>
 
 	<div class="entry-content discipline-updates">
-
+        <?php
+            $disciplines = get_terms( array(
+                            'taxonomy'   => 'discipline',
+                            'hide_empty' => false,
+                        ) );
+            $current_url = home_url( $wp->request );
+            echo "<div class='chooser'>See other discplines: ";
+            foreach ( $disciplines as $term ) {
+                $term_name = urlencode($term->name);
+                echo "<a class='discipline-link' href='{$current_url}/?discipline={$term_name}'>{$term->name}</a>";
+            }
+            echo "</div>";
+        ?>
 		<?php
         $current_date = current_time( 'M Y' );
         $done_ids = array(); // To track displayed post IDs and avoid duplicates

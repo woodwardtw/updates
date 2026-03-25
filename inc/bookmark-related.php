@@ -15,7 +15,70 @@ add_action( 'rest_api_init', function() {
     require_once ABSPATH . 'wp-admin/includes/media.php';
     require_once ABSPATH . 'wp-admin/includes/file.php';
     require_once ABSPATH . 'wp-admin/includes/image.php';
+
+    register_rest_route( 'updates/v1', '/check-duplicate', array(
+        'methods'             => WP_REST_Server::CREATABLE,
+        'callback'            => 'updates_check_duplicate_post',
+        'permission_callback' => function() { return current_user_can( 'edit_posts' ); },
+    ) );
 } );
+
+// -----------------------------------------------------------------------
+// REST callback: check for duplicate 'update' posts by source URL or title.
+// Returns { duplicate: false } or { duplicate: true, post_id, post_title, edit_url }.
+// The source URL is cleaned with update_strip_tracking_params() before
+// comparing so it matches the value stored by press_this_save_post.
+// -----------------------------------------------------------------------
+function updates_check_duplicate_post( WP_REST_Request $request ) {
+    global $wpdb;
+
+    $title = sanitize_text_field( $request->get_param( 'title' ) );
+    $url   = esc_url_raw( $request->get_param( 'url' ) );
+    if ( $url ) {
+        $url = update_strip_tracking_params( $url );
+    }
+
+    $found = null;
+
+    // Check source URL first — more reliable than title.
+    if ( $url ) {
+        $found = $wpdb->get_row( $wpdb->prepare(
+            "SELECT p.ID, p.post_title
+             FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+             WHERE pm.meta_key = 'source_url'
+               AND pm.meta_value = %s
+               AND p.post_type = 'update'
+               AND p.post_status IN ('publish', 'draft', 'pending', 'private')
+             LIMIT 1",
+            $url
+        ) );
+    }
+
+    // Fall back to exact title match.
+    if ( ! $found && $title ) {
+        $found = $wpdb->get_row( $wpdb->prepare(
+            "SELECT ID, post_title
+             FROM {$wpdb->posts}
+             WHERE post_title = %s
+               AND post_type = 'update'
+               AND post_status IN ('publish', 'draft', 'pending', 'private')
+             LIMIT 1",
+            $title
+        ) );
+    }
+
+    if ( $found ) {
+        return array(
+            'duplicate'  => true,
+            'post_id'    => (int) $found->ID,
+            'post_title' => $found->post_title,
+            'edit_url'   => get_edit_post_link( $found->ID, 'raw' ),
+        );
+    }
+
+    return array( 'duplicate' => false );
+}
 
 // -----------------------------------------------------------------------
 // Strip well-known tracking/analytics parameters from a URL.
@@ -251,6 +314,8 @@ add_action( 'admin_footer-press-this.php', function() {
         var arrowSVG        = <?php echo wp_json_encode( $arrow_svg ); ?>;
         var ajaxUrl         = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
         var taxNonce        = <?php echo wp_json_encode( wp_create_nonce( 'pt_store_taxonomy' ) ); ?>;
+        var wpApiNonce      = <?php echo wp_json_encode( wp_create_nonce( 'wp_rest' ) ); ?>;
+        var dupCheckUrl     = <?php echo wp_json_encode( rest_url( 'updates/v1/check-duplicate' ) ); ?>;
 
         // -----------------------------------------------------------------------
         // Build hierarchical checkboxes matching the Categories panel style.
@@ -329,6 +394,38 @@ add_action( 'admin_footer-press-this.php', function() {
         // -----------------------------------------------------------------------
         // Helpers
         // -----------------------------------------------------------------------
+
+        // Show a custom modal when a duplicate is detected.
+        // Returns a Promise that resolves to true (save anyway) or false (cancel).
+        function showDupConfirm( dupData ) {
+            return new Promise( function( resolve ) {
+                var overlay = document.createElement( 'div' );
+                overlay.id = 'pt-dup-overlay';
+                overlay.innerHTML =
+                    '<div id="pt-dup-modal">' +
+                        '<p class="pt-dup-heading">Duplicate update found</p>' +
+                        '<p class="pt-dup-body">A similar update already exists: ' +
+                            '<a href="' + dupData.edit_url + '" target="_blank" rel="noopener">' +
+                                '\u201c' + dupData.post_title + '\u201d' +
+                            '</a>.' +
+                            '<br>Save this one anyway?' +
+                        '</p>' +
+                        '<div class="pt-dup-actions">' +
+                            '<button id="pt-dup-cancel">Cancel</button>' +
+                            '<button id="pt-dup-save">Save anyway</button>' +
+                        '</div>' +
+                    '</div>';
+                document.body.appendChild( overlay );
+                overlay.querySelector( '#pt-dup-cancel' ).onclick = function() {
+                    window.close();
+                };
+                overlay.querySelector( '#pt-dup-save' ).onclick = function() {
+                    document.body.removeChild( overlay );
+                    resolve( true );
+                };
+            } );
+        }
+
         function getCheckedIds( panelId ) {
             var boxes = document.querySelectorAll( '#' + panelId + ' input[type="checkbox"]:checked' );
             return Array.prototype.map.call( boxes, function( b ) { return parseInt( b.value, 10 ); } );
@@ -372,38 +469,100 @@ add_action( 'admin_footer-press-this.php', function() {
                 var ptData        = window.pressThisData || {};
                 var postId        = ptData.postId;
 
+                // Extract title from the save request body and source URL from
+                // the bookmarklet query param so we can check for duplicates.
+                var requestBody = {};
+                try { requestBody = JSON.parse( ( options && options.body ) ? options.body : '{}' ); } catch(e) {}
+                var postTitle = requestBody.title || '';
+                var sourceUrl = new URLSearchParams( window.location.search ).get( 'u' ) || '';
+
+                // ---------------------------------------------------------------
+                // Duplicate check — fires before the taxonomy pre-save and before
+                // the actual press-this/v1/save request.
+                // ---------------------------------------------------------------
+                var dupCheck = ( postTitle || sourceUrl )
+                    ? origFetch( dupCheckUrl, {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': wpApiNonce },
+                        body:    JSON.stringify( { title: postTitle, url: sourceUrl } ),
+                      } ).then( function( r ) { return r.json(); } ).catch( function() { return null; } )
+                    : Promise.resolve( null );
+
                 // Store terms server-side first, then fire the press-this save.
                 var preSave = ( ( themeIds.length || disciplineIds.length || softwareIds.length ) && postId )
                     ? storeTaxonomyTerms( postId, themeIds, disciplineIds, softwareIds )
                     : Promise.resolve();
 
-                return preSave
-                    .then( function() {
-                        return origFetch( url, options );
-                    } )
-                    .then( function( response ) {
-                        if ( ! response.ok ) return response;
+                var doSave = function() {
+                    return preSave
+                        .then( function() {
+                            return origFetch( url, options );
+                        } )
+                        .then( function( response ) {
+                            if ( ! response.ok ) return response;
 
-                        return response.clone().json().then(
-                            function( data ) {
-                                if ( data && data.redirect ) {
-                                    // Published — close the popup.
-                                    // Return redirect-free response so React doesn't navigate.
-                                    window.close();
-                                    return new Response(
-                                        JSON.stringify( Object.assign( {}, data, { redirect: false } ) ),
-                                        { status: 200, headers: { 'Content-Type': 'application/json' } }
-                                    );
-                                }
-                                return response; // draft save — pass through unchanged
-                            },
-                            function() { return response; } // JSON parse error — pass through
-                        );
-                    } );
+                            return response.clone().json().then(
+                                function( data ) {
+                                    if ( data && data.redirect ) {
+                                        // Published — close the popup.
+                                        // Return redirect-free response so React doesn't navigate.
+                                        window.close();
+                                        return new Response(
+                                            JSON.stringify( Object.assign( {}, data, { redirect: false } ) ),
+                                            { status: 200, headers: { 'Content-Type': 'application/json' } }
+                                        );
+                                    }
+                                    return response; // draft save — pass through unchanged
+                                },
+                                function() { return response; } // JSON parse error — pass through
+                            );
+                        } );
+                };
+
+                var noOp = new Response(
+                    JSON.stringify( { redirect: false } ),
+                    { status: 200, headers: { 'Content-Type': 'application/json' } }
+                );
+
+                return dupCheck.then( function( dupData ) {
+                    if ( dupData && dupData.duplicate ) {
+                        return showDupConfirm( dupData ).then( function( confirmed ) {
+                            return confirmed ? doSave() : noOp;
+                        } );
+                    }
+                    return doSave();
+                } );
             }
 
             return origFetch.apply( this, arguments );
         };
+
+        // -----------------------------------------------------------------------
+        // On-load duplicate check — fires as soon as the script runs, using the
+        // URL (u=) and title (t=) params the bookmarklet appends to the window URL.
+        // origFetch is used directly to bypass the monkey-patch above.
+        // -----------------------------------------------------------------------
+        var params    = new URLSearchParams( window.location.search );
+        var pageUrl   = params.get( 'u' ) || '';
+        var pageTitle = params.get( 't' ) || '';
+
+        if ( pageUrl || pageTitle ) {
+            origFetch( dupCheckUrl, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': wpApiNonce },
+                body:    JSON.stringify( { title: pageTitle, url: pageUrl } ),
+            } )
+            .then( function( r ) { return r.json(); } )
+            .then( function( dupData ) {
+                if ( dupData && dupData.duplicate ) {
+                    showDupConfirm( dupData );
+                    // showDupConfirm resolves to true/false but we only need the
+                    // warning here — the save-time check still guards the actual save.
+                }
+            } )
+            .catch( function() {} ); // never block on check failure
+        }
+
     })();
     </script>
     <style>
@@ -422,6 +581,52 @@ add_action( 'admin_footer-press-this.php', function() {
     #pt-discipline-panel.is-opened .components-panel__arrow,
     #pt-software-panel.is-opened .components-panel__arrow {
         transform: translateY(-50%) rotate(180deg);
+    }
+    /* Duplicate-detection modal */
+    #pt-dup-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,.55);
+        z-index: 99999;
+        display: flex; align-items: center; justify-content: center;
+    }
+    #pt-dup-modal {
+        background: #fff;
+        border-radius: 4px;
+        padding: 24px 28px;
+        max-width: 380px;
+        width: 90%;
+        font: 13px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        box-shadow: 0 4px 24px rgba(0,0,0,.25);
+    }
+    .pt-dup-heading {
+        margin: 0 0 10px;
+        font-size: 15px;
+        font-weight: 600;
+    }
+    .pt-dup-body {
+        margin: 0 0 20px;
+    }
+    .pt-dup-body a {
+        color: #2271b1;
+    }
+    .pt-dup-actions {
+        display: flex; gap: 8px; justify-content: flex-end;
+    }
+    .pt-dup-actions button {
+        padding: 6px 14px;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    #pt-dup-save {
+        background: #2271b1;
+        border-color: #2271b1;
+        color: #fff;
+    }
+    #pt-dup-cancel {
+        background: #f6f7f7;
+        color: #1d2327;
     }
     </style>
     <?php

@@ -121,34 +121,50 @@ defined( 'ABSPATH' ) || exit;
         if ( $general_query->have_posts() ) {
             echo '<div class="general-updates"><h1>General Updates</h1>';
          }
+        // Group general posts by theme; a post with multiple themes appears under each.
+        $site_url   = get_site_url();
+        $by_theme   = []; // term_id => [ 'term' => $term, 'posts' => [] ]
+        $no_theme_posts = [];
+
         foreach ( $general_query->posts as $post ) {
-            $site_url = get_site_url();
-            $post_id = $post->ID;
-            $url = get_permalink($post_id);
-            $title = get_the_title($post_id);
-            $theme = get_the_terms( $post_id, 'theme' );
-            $theme_count = is_array($theme) ? count($theme) : 0;
-            $label = match ($theme_count) {
-                0 => "",
-                1     => 'Theme: ',
-                default => 'Themes: ',
-            };
-            $theme_list = ''; 
-            if ( $theme_count > 0 && $theme_count !== FALSE) {
-                foreach ( $theme as $term ) {
-                    //https://wpmu.local/updates/?post_type=update&themes=access-and-equity
-                    $theme_list .= "<a href='" . $site_url . "/?post_type=update&themes=" . $term->slug . "'>" . $term->name . "</a>, ";
+            $post_themes = get_the_terms( $post->ID, 'theme' );
+            if ( is_array( $post_themes ) && $post_themes ) {
+                foreach ( $post_themes as $term ) {
+                    if ( ! isset( $by_theme[ $term->term_id ] ) ) {
+                        $by_theme[ $term->term_id ] = [ 'term' => $term, 'posts' => [] ];
+                    }
+                    $by_theme[ $term->term_id ]['posts'][] = $post;
                 }
+            } else {
+                $no_theme_posts[] = $post;
             }
-            $theme_list = rtrim( $theme_list, ', ' );
-           // $excerpt =  wp_trim_words( get_the_content( null, false, $post_id ), 125, '&hellip;' );
-           $excerpt = get_the_content( null, false, $post_id );
+        }
+
+        foreach ( $by_theme as $group ) {
+            $term = $group['term'];
+            echo "<h3 class='theme-group-header'><a href='" . esc_url( $site_url . '/?post_type=update&themes=' . $term->slug ) . "'>" . esc_html( $term->name ) . "</a></h3>";
+            foreach ( $group['posts'] as $post ) {
+                $post_id = $post->ID;
+                $url     = get_permalink( $post_id );
+                $title   = get_the_title( $post_id );
+                $excerpt = get_the_content( null, false, $post_id );
+                echo "<div class='update-item'>
+                        <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
+                        <div class='update-excerpt'>{$excerpt}</div>
+                    </div>";
+            }
+        }
+
+        foreach ( $no_theme_posts as $post ) {
+            $post_id = $post->ID;
+            $url     = get_permalink( $post_id );
+            $title   = get_the_title( $post_id );
+            $excerpt = get_the_content( null, false, $post_id );
             echo "<div class='update-item'>
                     <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
                     <div class='update-excerpt'>{$excerpt}</div>
-                    <div class='update-tax'>{$label} {$theme_list}</div>
-                </div>";    
-        }  
+                </div>";
+        }
         wp_reset_postdata();
         echo '</div>';
 		//the_content();

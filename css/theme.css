@@ -16237,6 +16237,19 @@ h2.update-title, .update-title.h2 {
   border-bottom: 3px solid #efefef;
 }
 
+.update-item.spotlight {
+  border-left: 9px solid #ffeb3b;
+  border-bottom: 9px solid #ffeb3b;
+}
+
+.spotlight .btn-secondary {
+  background-color: #071427;
+  border-color: #071427;
+  color: #fff;
+  margin-top: 20px;
+  text-decoration: none;
+}
+
 .update-excerpt {
   margin-left: 20px;
 }

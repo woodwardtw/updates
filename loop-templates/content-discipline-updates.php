@@ -25,7 +25,7 @@ defined( 'ABSPATH' ) || exit;
         <?php
             $disciplines = get_terms( array(
                             'taxonomy'   => 'discipline',
-                            'hide_empty' => false,
+                            'hide_empty' => true,
                         ) );
             $current_url = home_url( $wp->request );
             echo "<div class='chooser'>See other discplines: ";
@@ -82,6 +82,11 @@ defined( 'ABSPATH' ) || exit;
                 1     => 'Theme: ',
                 default => 'Themes: ',
             };
+            $spotlight = is_array( $theme ) && in_array( 'faculty-spotlight', array_column( $theme, 'slug' ), true );
+            $spotlight_class = '';
+            if ( $spotlight ) {
+                $spotlight_class = 'spotlight';
+            }
             $theme_list = '';
             if ( $theme_count > 0 && $theme_count !== FALSE) {
                 foreach ( $theme as $term ) {
@@ -90,9 +95,10 @@ defined( 'ABSPATH' ) || exit;
                 }
             }
             $theme_list = rtrim( $theme_list, ', ' );
-           // $excerpt =  wp_trim_words( get_the_content( null, false, $post_id ), 125, '&hellip;' );
-           $excerpt = get_the_content( null, false, $post_id );
-          echo "<li><div class='update-item'>
+            $excerpt = has_excerpt( $post_id )
+                ? get_the_excerpt( $post_id )
+                : get_the_content( null, false, $post_id );
+          echo "<li><div class='update-item {$spotlight_class}'>
                 <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
                 <div class='update-excerpt'>{$excerpt}</div>
                 <div class='update-tax'>{$label} {$theme_list}</div>
@@ -100,7 +106,7 @@ defined( 'ABSPATH' ) || exit;
         }
         echo '</ol>';
         wp_reset_postdata();
-        //GENERAL QUERY - for stuff not already selected - nothing should show if no discipline is selected
+        //GENERAL QUERY - for stuff not already selected 
         $general_query = new WP_Query( array(
             'post_type' => 'update',
             'post__not_in' => $done_ids, // Exclude already displayed posts

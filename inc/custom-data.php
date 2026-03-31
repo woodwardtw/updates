@@ -50,7 +50,7 @@ function create_update_cpt() {
     'description' => __( '', 'textdomain' ),
     'labels' => $labels,
     'menu_icon' => '',
-    'supports' => array('title', 'editor', 'revisions', 'author', 'trackbacks', 'custom-fields', 'thumbnail',),
+    'supports' => array('title', 'editor', 'revisions', 'author', 'trackbacks', 'custom-fields', 'thumbnail', 'excerpt'),
     'taxonomies' => array('category', 'post_tag', 'theme', 'discipline'),
     'public' => true,
     'show_ui' => true,
@@ -403,4 +403,31 @@ function create_discipline_taxonomies()
   global $wp_rewrite;
   $wp_rewrite->flush_rules();
 }
+
+// -----------------------------------------------------------------------
+// Admin columns for the 'update' post type list table:
+//   - Remove category and tag columns (added automatically because the
+//     CPT registers those taxonomies).
+//   - Add Theme and Discipline columns.
+// -----------------------------------------------------------------------
+add_filter( 'manage_update_posts_columns', function( $columns ) {
+    unset( $columns['taxonomy-category'] );
+    unset( $columns['taxonomy-post_tag'] );
+    unset( $columns['categories'] );
+    unset( $columns['tags'] );
+    $columns['taxonomy-theme']      = __( 'Themes' );
+    $columns['taxonomy-discipline'] = __( 'Disciplines' );
+    return $columns;
+} );
+
+add_action( 'manage_update_posts_custom_column', function( $column, $post_id ) {
+    if ( $column === 'taxonomy-theme' ) {
+        $terms = get_the_terms( $post_id, 'theme' );
+        echo is_array( $terms ) ? implode( ', ', wp_list_pluck( $terms, 'name' ) ) : '—';
+    }
+    if ( $column === 'taxonomy-discipline' ) {
+        $terms = get_the_terms( $post_id, 'discipline' );
+        echo is_array( $terms ) ? implode( ', ', wp_list_pluck( $terms, 'name' ) ) : '—';
+    }
+}, 10, 2 );
 

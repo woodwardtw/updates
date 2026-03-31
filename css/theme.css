@@ -15828,6 +15828,7 @@ h1.entry-title, .entry-title.h1 {
 
 .entry-content {
   overflow: hidden;
+  margin-top: 40px;
 }
 
 .entry-content a {

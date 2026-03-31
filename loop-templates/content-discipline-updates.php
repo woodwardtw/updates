@@ -123,24 +123,8 @@ defined( 'ABSPATH' ) || exit;
          }
         // Group general posts by theme; a post with multiple themes appears under each.
         $site_url   = get_site_url();
-        $no_theme_posts = [];
-        //CLEAN THIS UP SINCE WE AREN'T USING the grouping by theme right now - just want to show any posts that don't have a discipline term
-        foreach ( $general_query->posts as $post ) {
-            $post_themes = get_the_terms( $post->ID, 'theme' );
-            if ( is_array( $post_themes ) && $post_themes ) {
-                foreach ( $post_themes as $term ) {
-                    if ( ! isset( $by_theme[ $term->term_id ] ) ) {
-                        $by_theme[ $term->term_id ] = [ 'term' => $term, 'posts' => [] ];
-                    }
-                    $by_theme[ $term->term_id ]['posts'][] = $post;
-                }
-            } else {
-                $no_theme_posts[] = $post;
-            }
-        }
-
     
-        foreach ( $no_theme_posts as $post ) {
+        foreach ( $general_query->posts as $post ) {
             $post_id = $post->ID;
             $url     = get_permalink( $post_id );
             $title   = get_the_title( $post_id );

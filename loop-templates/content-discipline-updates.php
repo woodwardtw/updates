@@ -123,9 +123,8 @@ defined( 'ABSPATH' ) || exit;
          }
         // Group general posts by theme; a post with multiple themes appears under each.
         $site_url   = get_site_url();
-        $by_theme   = []; // term_id => [ 'term' => $term, 'posts' => [] ]
         $no_theme_posts = [];
-
+        //CLEAN THIS UP SINCE WE AREN'T USING the grouping by theme right now - just want to show any posts that don't have a discipline term
         foreach ( $general_query->posts as $post ) {
             $post_themes = get_the_terms( $post->ID, 'theme' );
             if ( is_array( $post_themes ) && $post_themes ) {
@@ -140,21 +139,7 @@ defined( 'ABSPATH' ) || exit;
             }
         }
 
-        foreach ( $by_theme as $group ) {
-            $term = $group['term'];
-            echo "<h3 class='theme-group-header'><a href='" . esc_url( $site_url . '/?post_type=update&themes=' . $term->slug ) . "'>" . esc_html( $term->name ) . "</a></h3>";
-            foreach ( $group['posts'] as $post ) {
-                $post_id = $post->ID;
-                $url     = get_permalink( $post_id );
-                $title   = get_the_title( $post_id );
-                $excerpt = get_the_content( null, false, $post_id );
-                echo "<div class='update-item'>
-                        <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
-                        <div class='update-excerpt'>{$excerpt}</div>
-                    </div>";
-            }
-        }
-
+    
         foreach ( $no_theme_posts as $post ) {
             $post_id = $post->ID;
             $url     = get_permalink( $post_id );

@@ -135,6 +135,12 @@ defined( 'ABSPATH' ) || exit;
                 $excerpt = has_excerpt( $post_id )
                     ? get_the_excerpt( $post_id )
                     : get_the_content( null, false, $post_id );
+                // Replace top-level <span> wrappers with <p>.
+                $excerpt = preg_replace( '#^<span([^>]*)>(.*)</span>$#is', '<p$1>$2</p>', trim( $excerpt ) );
+                // Wrap in <p> if no block-level element is present.
+                if ( ! preg_match( '#^\s*<(p|div|ul|ol|blockquote|h[1-6])[\s>]#i', $excerpt ) ) {
+                    $excerpt = '<p>' . $excerpt . '</p>';
+                }
             echo "<li><div class='update-item {$spotlight_class}'>
                     <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
                     <div class='update-excerpt'>{$excerpt}</div>

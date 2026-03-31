@@ -23,6 +23,7 @@ defined( 'ABSPATH' ) || exit;
 
 	<div class="entry-content discipline-updates">
         <?php
+        //build navigation for discipline updates
             $disciplines = get_terms( array(
                             'taxonomy'   => 'discipline',
                             'hide_empty' => true,
@@ -36,30 +37,36 @@ defined( 'ABSPATH' ) || exit;
             echo "</div>";
         ?>
 		<?php
+        //SHOW GENERAL UPDATES IF NO DISCIPLINE SELECTED
         $current_date = current_time( 'M Y' );
-
-        if($term_name = ''){
+        if($discipline == '') {
+            echo '<p>Showing general updates added during ' . esc_html( $current_date ) . '.</p>';
+            $discipline_query = new WP_Query( array(
+                'post_type' => 'update',
+                'date_query' => array(
+                    array(
+                        'year'  => date( 'Y' ),
+                        'month' => date( 'm' ),
+                    ),
+                ),
+            ) );
+        
             //GENERAL QUERY - for stuff not already selected 
-        $general_query = new WP_Query( array(
-            'post_type' => 'update',
-            'post__not_in' => $done_ids, // Exclude already displayed posts
-            'tax_query'  => array(
-                array(
-                    'taxonomy' => 'discipline',
-                    'operator' => 'NOT EXISTS', // EXCLUDE ANY POSTS WITH A DISCIPLINE TERM
+            $general_query = new WP_Query( array(
+                'post_type' => 'update',
+                'tax_query'  => array(
+                    array(
+                        'taxonomy' => 'discipline',
+                        'operator' => 'NOT EXISTS', // EXCLUDE ANY POSTS WITH A DISCIPLINE TERM
+                    ),
                 ),
-            ),
-            'date_query' => array(
-                array(
-                    'year'  => date( 'Y' ),
-                    'month' => date( 'm' ),
+                'date_query' => array(
+                    array(
+                        'year'  => date( 'Y' ),
+                        'month' => date( 'm' ),
+                    ),
                 ),
-            ),
-        ) );
-
-        if ( $general_query->have_posts() ) {
-            echo '<div class="general-updates"><h1>General Updates</h1>';
-         }
+            ) );
         // Group general posts by theme; a post with multiple themes appears under each.
         $site_url   = get_site_url();
     
@@ -79,7 +86,7 @@ defined( 'ABSPATH' ) || exit;
 
 
         $done_ids = array(); // To track displayed post IDs and avoid duplicates
-        if ( $discipline ) {
+        if ( $discipline != '') {
             echo '<p>Showing updates in ' . esc_html( $discipline ) . ' added during ' . esc_html( $current_date ) . '.</p>';
             $discipline_query = new WP_Query( array(
                 'post_type' => 'update',
@@ -97,57 +104,46 @@ defined( 'ABSPATH' ) || exit;
                     ),
                 ),
             ) );
-        } else {
-            echo '<p>Showing all updates added during ' . esc_html( $current_date ) . '.</p>';
-            $discipline_query = new WP_Query( array(
-                'post_type' => 'update',
-                'date_query' => array(
-                    array(
-                        'year'  => date( 'Y' ),
-                        'month' => date( 'm' ),
-                    ),
-                ),
-            ) );
-        }
-        echo '<ol class="discipline-updates-list">';
-        foreach ( $discipline_query->posts as $post ) {
-            $site_url = get_site_url();
-            $post_id = $post->ID;
-            $done_ids[] = $post_id; // Add current post ID to the tracking array
-            $url = get_permalink($post_id);
-            $title = get_the_title($post_id);
-            $theme = get_the_terms( $post_id, 'theme' );
-            $theme_count = is_array($theme) ? count($theme) : 0;
-            $label = match ($theme_count) {
-                0 => "",
-                1     => 'Theme: ',
-                default => 'Themes: ',
-            };
-            $spotlight = is_array( $theme ) && in_array( 'faculty-spotlight', array_column( $theme, 'slug' ), true );
-            $spotlight_class = '';
-            if ( $spotlight ) {
-                $spotlight_class = 'spotlight';
-            }
-            $theme_list = '';
-            if ( $theme_count > 0 && $theme_count !== FALSE) {
-                foreach ( $theme as $term ) {
-                    //https://wpmu.local/updates/?post_type=update&themes=access-and-equity
-                    $theme_list .= "<a href='" . $site_url . "/?post_type=update&themes=" . $term->slug . "'>" . $term->name . "</a>, ";
-                }
-            }
-            $theme_list = rtrim( $theme_list, ', ' );
-            $excerpt = has_excerpt( $post_id )
-                ? get_the_excerpt( $post_id )
-                : get_the_content( null, false, $post_id );
-          echo "<li><div class='update-item {$spotlight_class}'>
-                <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
-                <div class='update-excerpt'>{$excerpt}</div>
-                <div class='update-tax'>{$label} {$theme_list}</div>
-            </div></li>";
-        }
-        echo '</ol>';
-        wp_reset_postdata();
         
+            echo '<ol class="discipline-updates-list">';
+            foreach ( $discipline_query->posts as $post ) {
+                $site_url = get_site_url();
+                $post_id = $post->ID;
+                $done_ids[] = $post_id; // Add current post ID to the tracking array
+                $url = get_permalink($post_id);
+                $title = get_the_title($post_id);
+                $theme = get_the_terms( $post_id, 'theme' );
+                $theme_count = is_array($theme) ? count($theme) : 0;
+                $label = match ($theme_count) {
+                    0 => "",
+                    1     => 'Theme: ',
+                    default => 'Themes: ',
+                };
+                $spotlight = is_array( $theme ) && in_array( 'faculty-spotlight', array_column( $theme, 'slug' ), true );
+                $spotlight_class = '';
+                if ( $spotlight ) {
+                    $spotlight_class = 'spotlight';
+                }
+                $theme_list = '';
+                if ( $theme_count > 0 && $theme_count !== FALSE) {
+                    foreach ( $theme as $term ) {
+                        //https://wpmu.local/updates/?post_type=update&themes=access-and-equity
+                        $theme_list .= "<a href='" . $site_url . "/?post_type=update&themes=" . $term->slug . "'>" . $term->name . "</a>, ";
+                    }
+                }
+                $theme_list = rtrim( $theme_list, ', ' );
+                $excerpt = has_excerpt( $post_id )
+                    ? get_the_excerpt( $post_id )
+                    : get_the_content( null, false, $post_id );
+            echo "<li><div class='update-item {$spotlight_class}'>
+                    <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
+                    <div class='update-excerpt'>{$excerpt}</div>
+                    <div class='update-tax'>{$label} {$theme_list}</div>
+                </div></li>";
+            }
+            echo '</ol>';
+            wp_reset_postdata();
+        }
 		//the_content();
 		understrap_link_pages();
 		?>

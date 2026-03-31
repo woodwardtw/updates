@@ -290,3 +290,24 @@ if ( ! function_exists( 'understrap_all_excerpts_get_more_link' ) ) {
 		return $post_excerpt;
 	}
 }
+
+// Add opening and closing curly quotation marks as plain text inside every
+// blockquote element in post content.
+add_filter( 'the_content', 'updates_add_blockquote_marks' );
+function updates_add_blockquote_marks( $content ) {
+	if ( get_post_type( get_the_ID() ) !== 'update' ) {
+		return $content;
+	}
+	return preg_replace_callback(
+		'#<blockquote([^>]*)>(.*?)</blockquote>#is',
+		function( $matches ) {
+			$inner = $matches[2];
+			// Inject opening quote after the first <p> or <p ...> tag.
+			$inner = preg_replace( '/(<p[^>]*>)(\x{201C})?/u', '$1' . "\u{201C}", $inner, 1 );
+			// Inject closing quote before the last </p> tag.
+			$inner = preg_replace( '/(\x{201D})?(<\/p>)(?!.*<\/p>)/us', "\u{201D}" . '$2', $inner, 1 );
+			return '<blockquote' . $matches[1] . '>' . $inner . '</blockquote>';
+		},
+		$content
+	);
+}

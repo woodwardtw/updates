@@ -449,24 +449,24 @@ to {background-color: green}
 	font-weight: 700;
 }
 
-blockquote {
-	// border-left: 4px solid $light-blue;
-	padding:30px 40px;
-	margin: 20px;
-	font-style: italic;
-	position: relative;
-	background-color: $light-blue;
-}
+// blockquote {
+// 	// border-left: 4px solid $light-blue;
+// 	padding:30px 40px;
+// 	margin: 20px;
+// 	font-style: italic;
+// 	position: relative;
+// 	background-color: $light-blue;
+// }
 
-blockquote::before{
-  font-family:Arial;
-  content: "\201C";
-  color: $dark-gray;
-  font-size:4em;
-  position: absolute;
-  left: -10px;
-  top:-30px;
-}
+// blockquote::before{
+//   font-family:Arial;
+//   content: "\201C";
+//   color: $dark-gray;
+//   font-size:4em;
+//   position: absolute;
+//   left: -10px;
+//   top:-30px;
+// }
 
 
 h2.update-title {

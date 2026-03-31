@@ -16210,24 +16210,6 @@ h2:target, .h2:target, h3:target, .h3:target, h4:target, .h4:target, ol:target, 
   font-weight: 700;
 }
 
-blockquote {
-  padding: 30px 40px;
-  margin: 20px;
-  font-style: italic;
-  position: relative;
-  background-color: #e5f1fa;
-}
-
-blockquote::before {
-  font-family: Arial;
-  content: "“";
-  color: #424242;
-  font-size: 4em;
-  position: absolute;
-  left: -10px;
-  top: -30px;
-}
-
 h2.update-title, .update-title.h2 {
   font-size: 1.5rem;
 }

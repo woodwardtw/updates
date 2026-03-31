@@ -28,7 +28,7 @@ defined( 'ABSPATH' ) || exit;
                             'hide_empty' => true,
                         ) );
             $current_url = home_url( $wp->request );
-            echo "<div class='chooser'>See other discplines: ";
+            echo "<div class='chooser'><a href='{$current_url}'>General updates</a>";
             foreach ( $disciplines as $term ) {
                 $term_name = urlencode($term->name);
                 echo "<a class='discipline-link' href='{$current_url}/?discipline={$term_name}'>{$term->name}</a>";
@@ -37,6 +37,47 @@ defined( 'ABSPATH' ) || exit;
         ?>
 		<?php
         $current_date = current_time( 'M Y' );
+
+        if($term_name = ''){
+            //GENERAL QUERY - for stuff not already selected 
+        $general_query = new WP_Query( array(
+            'post_type' => 'update',
+            'post__not_in' => $done_ids, // Exclude already displayed posts
+            'tax_query'  => array(
+                array(
+                    'taxonomy' => 'discipline',
+                    'operator' => 'NOT EXISTS', // EXCLUDE ANY POSTS WITH A DISCIPLINE TERM
+                ),
+            ),
+            'date_query' => array(
+                array(
+                    'year'  => date( 'Y' ),
+                    'month' => date( 'm' ),
+                ),
+            ),
+        ) );
+
+        if ( $general_query->have_posts() ) {
+            echo '<div class="general-updates"><h1>General Updates</h1>';
+         }
+        // Group general posts by theme; a post with multiple themes appears under each.
+        $site_url   = get_site_url();
+    
+        foreach ( $general_query->posts as $post ) {
+            $post_id = $post->ID;
+            $url     = get_permalink( $post_id );
+            $title   = get_the_title( $post_id );
+            $excerpt = get_the_content( null, false, $post_id );
+            echo "<div class='update-item'>
+                    <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
+                    <div class='update-excerpt'>{$excerpt}</div>
+                </div>";
+        }
+        wp_reset_postdata();
+        echo '</div>';
+        }
+
+
         $done_ids = array(); // To track displayed post IDs and avoid duplicates
         if ( $discipline ) {
             echo '<p>Showing updates in ' . esc_html( $discipline ) . ' added during ' . esc_html( $current_date ) . '.</p>';
@@ -106,42 +147,7 @@ defined( 'ABSPATH' ) || exit;
         }
         echo '</ol>';
         wp_reset_postdata();
-        //GENERAL QUERY - for stuff not already selected 
-        $general_query = new WP_Query( array(
-            'post_type' => 'update',
-            'post__not_in' => $done_ids, // Exclude already displayed posts
-            'tax_query'  => array(
-                array(
-                    'taxonomy' => 'discipline',
-                    'operator' => 'NOT EXISTS', // EXCLUDE ANY POSTS WITH A DISCIPLINE TERM
-                ),
-            ),
-            'date_query' => array(
-                array(
-                    'year'  => date( 'Y' ),
-                    'month' => date( 'm' ),
-                ),
-            ),
-        ) );
-
-        if ( $general_query->have_posts() ) {
-            echo '<div class="general-updates"><h1>General Updates</h1>';
-         }
-        // Group general posts by theme; a post with multiple themes appears under each.
-        $site_url   = get_site_url();
-    
-        foreach ( $general_query->posts as $post ) {
-            $post_id = $post->ID;
-            $url     = get_permalink( $post_id );
-            $title   = get_the_title( $post_id );
-            $excerpt = get_the_content( null, false, $post_id );
-            echo "<div class='update-item'>
-                    <h2 class='update-title'><a href='{$url}'>{$title}</a></h2>
-                    <div class='update-excerpt'>{$excerpt}</div>
-                </div>";
-        }
-        wp_reset_postdata();
-        echo '</div>';
+        
 		//the_content();
 		understrap_link_pages();
 		?>

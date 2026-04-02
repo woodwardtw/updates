@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
   <?php while ( have_posts() ): the_post(); ?>
   <?php 
         $post_id = get_the_ID();
-        $theme_list = '';
+        $theme_list = [];
         $theme = get_the_terms( $post_id, 'theme' );
         $theme_count = is_array($theme) ? count($theme) : 0;
         $label = match ($theme_count) {
@@ -23,7 +23,7 @@ defined( 'ABSPATH' ) || exit;
                 };
          if ( $theme_count > 0 && $theme_count !== FALSE) {
                     foreach ( $theme as $term ) {
-                        $theme_list .= "<a href='" . $site_url . "/?post_type=update&themes=" . $term->slug . "'>" . $term->name . "</a>, ";
+                        array_push( $theme_list, "<a href='" . $site_url . "/?_theme=" . $term->slug . "'>" . $term->name . "</a> " );
                     }     
                 }   
         $spotlight = is_array( $theme ) && in_array( 'faculty-spotlight', array_column( $theme, 'slug' ), true );
@@ -31,7 +31,7 @@ defined( 'ABSPATH' ) || exit;
         if ( $spotlight ) {
             $spotlight_class = 'spotlight';
         }
-  
+        $theme_list = implode( ', ', $theme_list );
   ?>
   <div class="entry-content <?php echo $spotlight_class; ?>">
     <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>

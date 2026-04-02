@@ -13,6 +13,17 @@ defined( 'ABSPATH' ) || exit;
   <?php while ( have_posts() ): the_post(); ?>
   <?php 
         $theme = get_the_terms( $post_id, 'theme' );
+        $theme_count = is_array($theme) ? count($theme) : 0;
+        $label = match ($theme_count) {
+                    0 => "",
+                    1     => 'Theme: ',
+                    default => 'Themes: ',
+                };
+         if ( $theme_count > 0 && $theme_count !== FALSE) {
+                    foreach ( $theme as $term ) {
+                        $theme_list .= "<a href='" . $site_url . "/?post_type=update&themes=" . $term->slug . "'>" . $term->name . "</a>, ";
+                    }     
+                }   
         $spotlight = is_array( $theme ) && in_array( 'faculty-spotlight', array_column( $theme, 'slug' ), true );
         $spotlight_class = '';
         if ( $spotlight ) {
@@ -26,6 +37,8 @@ defined( 'ABSPATH' ) || exit;
                     ? get_the_excerpt( $post_id )
                     : get_the_content( null, false, $post_id );
             echo $excerpt;
+            echo "<div class='update-tax'>{$label} {$theme_list}</div>";
+     
      ?>
   </div>
   <?php endwhile; ?>

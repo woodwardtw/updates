@@ -379,6 +379,7 @@ add_action( 'admin_footer-press-this.php', function() {
 
             observer.disconnect();
 
+
             var wrapper = document.createElement( 'div' );
             wrapper.innerHTML =
                 buildPanel( 'pt-theme-panel',      '<?php echo esc_js( __( 'Themes',      'understrap' ) ); ?>', themeTerms ) +

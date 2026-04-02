@@ -12,6 +12,7 @@ defined( 'ABSPATH' ) || exit;
 <?php if ( have_posts() ) : ?>
   <?php while ( have_posts() ): the_post(); ?>
   <?php 
+        $site_url   = get_site_url();
         $post_id = get_the_ID();
         $theme_list = [];
         $theme = get_the_terms( $post_id, 'theme' );

@@ -12,6 +12,8 @@ defined( 'ABSPATH' ) || exit;
 <?php if ( have_posts() ) : ?>
   <?php while ( have_posts() ): the_post(); ?>
   <?php 
+        $post_id = get_the_ID();
+        $theme_list = '';
         $theme = get_the_terms( $post_id, 'theme' );
         $theme_count = is_array($theme) ? count($theme) : 0;
         $label = match ($theme_count) {

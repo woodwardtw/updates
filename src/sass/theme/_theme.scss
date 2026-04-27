@@ -515,6 +515,15 @@ h2.update-title {
 	margin-right: 10px;
 }
 
+.facetwp-pager{
+	display: flex;
+	justify-content: center;
+	margin-top: 20px;	
+	width: 100%;
+	background-color: #efefef;
+	padding: 8px;
+}
+
 @media (max-width: 768px){
 
 	#right-sidebar {

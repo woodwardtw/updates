@@ -36,6 +36,7 @@ defined( 'ABSPATH' ) || exit;
   ?>
   <div class="entry-content <?php echo $spotlight_class; ?>">
     <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
+    <span class="entry-date">Posted on <?php echo get_the_date(); ?></span>
     <?php  $excerpt = has_excerpt( $post_id )
                     ? get_the_excerpt( $post_id )
                     : get_the_content( null, false, $post_id );
